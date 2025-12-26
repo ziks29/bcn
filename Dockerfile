@@ -71,7 +71,10 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/entrypoint.sh ./entrypoint.sh
 
 # Install Prisma CLI globally so it's available in the runner
-RUN npm install -g prisma
+RUN npm install -g prisma@5.22.0
+
+# Allow nextjs user to write to global node_modules/prisma (for engine downloads)
+RUN chown -R nextjs:nodejs /usr/local/lib/node_modules/prisma
 
 # Ensure entrypoint is executable in runner
 USER root

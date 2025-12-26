@@ -7,10 +7,9 @@ echo "Starting BCN App Entrypoint..."
 
 # Run Prisma migrations
 if [ -n "$DATABASE_URL" ]; then
-  echo "Running Prisma migrations..."
-  # Use npx to find prisma in node_modules
-  # We use --schema to be explicit
-  npx prisma migrate deploy --schema=./prisma/schema.prisma
+  echo "Synchronizing Prisma schema..."
+  # Use db push instead of migrate deploy since we don't have a migrations folder yet
+  prisma db push --schema=./prisma/schema.prisma --accept-data-loss --skip-generate
   
   # Optional: Seed data if needed
   # echo "Seeding database..."
