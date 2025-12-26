@@ -38,6 +38,7 @@ services:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-bcn_news}?schema=public
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-super-secret-development-key-change-in-prod}
       - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:9999}
+      - ADMIN_SECRET=${ADMIN_SECRET:-change-this-to-secure-secret}
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     depends_on:

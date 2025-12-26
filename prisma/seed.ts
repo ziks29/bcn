@@ -58,18 +58,24 @@ const ARTICLES = [
 ]
 
 async function main() {
-    const hashedPassword = await bcrypt.hash('admin123', 10)
+    // 1. Find or Create Admin User
+    let admin = await prisma.user.findFirst({
+        where: { role: 'ADMIN' }
+    });
 
-    // 1. Create Admin User
-    const admin = await prisma.user.upsert({
-        where: { username: 'admin' },
-        update: {},
-        create: {
-            username: 'admin',
-            password: hashedPassword,
-            role: 'ADMIN',
-        },
-    })
+    if (!admin) {
+        const hashedPassword = await bcrypt.hash('admin123', 10)
+        admin = await prisma.user.create({
+            data: {
+                username: 'admin',
+                password: hashedPassword,
+                role: 'ADMIN',
+            },
+        })
+        console.log('Created default admin user')
+    } else {
+        console.log(`Found existing admin user: ${admin.username}`)
+    }
 
     console.log({ admin })
 
@@ -85,7 +91,7 @@ async function main() {
                 authorId: admin.id,
             },
         })
-        console.log(`Created article: ${createdArticle.title}`)
+
         console.log(`Created article: ${createdArticle.title}`)
     }
 
