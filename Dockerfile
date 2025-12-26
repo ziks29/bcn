@@ -1,6 +1,6 @@
 # Stage 1: Dependencies
 FROM node:20-alpine AS deps
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat openssl openssl-dev
 WORKDIR /app
 
 # Copy package files
@@ -17,16 +17,24 @@ RUN if [ -f pnpm-lock.yaml ]; then \
 
 # Stage 2: Builder
 FROM node:20-alpine AS builder
+RUN apk add --no-cache libc6-compat openssl openssl-dev
 WORKDIR /app
 
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/package.json ./package.json
 
 # Copy Prisma schema first
 COPY prisma ./prisma
 
 # Generate Prisma Client
-RUN npx prisma generate
+RUN if [ -f pnpm-lock.yaml ]; then \
+    corepack enable && \
+    corepack prepare pnpm@latest --activate && \
+    npx prisma generate; \
+    else \
+    npx prisma generate; \
+    fi
 
 # Copy the rest of the application
 COPY . .
@@ -43,6 +51,7 @@ RUN if [ -f pnpm-lock.yaml ]; then \
 
 # Stage 3: Runner
 FROM node:20-alpine AS runner
+RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -56,7 +65,8 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+# Copy Prisma Client (pnpm stores it in .pnpm directory)
+COPY --from=builder /app/node_modules/.pnpm ./node_modules/
 
 USER nextjs
 
