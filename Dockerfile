@@ -39,6 +39,9 @@ RUN if [ -f pnpm-lock.yaml ]; then \
 # Copy the rest of the application
 COPY . .
 
+# Make entrypoint script executable
+RUN chmod +x entrypoint.sh
+
 # Build Next.js app
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN if [ -f pnpm-lock.yaml ]; then \
@@ -65,9 +68,13 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/entrypoint.sh ./entrypoint.sh
 # Copy Prisma Client (pnpm stores it in .pnpm directory)
 COPY --from=builder /app/node_modules/.pnpm ./node_modules/
 
+# Ensure entrypoint is executable in runner
+USER root
+RUN chmod +x entrypoint.sh
 USER nextjs
 
 EXPOSE 3000
@@ -75,4 +82,5 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
+ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["node", "server.js"]

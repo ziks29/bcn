@@ -1,30 +1,33 @@
-# BCN News - Barcelona Digital News Platform
+# Blaine County News (BCN)
 
-A modern news platform built with Next.js 14, featuring a complete admin panel for content management.
+A modern, brutalist-style news platform built with Next.js 14, featuring a complete admin panel for content management. Inspired by the iconic news outlets of Blaine County.
+
+> [!NOTE]
+> Foundation for the "Truth is not mandatory" news experience.
 
 ## 🚀 Production Deployment
 
-**Live URL**: https://blainenews.n9xo.xyz
+**Live URL**: [blainenews.n9xo.xyz](https://blainenews.n9xo.xyz)
 
 ### Quick Deploy
 ```bash
 git push origin main  # GitHub Actions + Watchtower auto-deploy!
 ```
 
-See [DEPLOY.md](DEPLOY.md) for full deployment guide.
+See [DEPLOY.md](DEPLOY.md) for the full deployment guide.
 
 ## 📋 Documentation
 
-- **[DEPLOY.md](DEPLOY.md)** - Production deployment quick reference
-- **[GITHUB_SETUP.md](GITHUB_SETUP.md)** - GitHub Container Registry setup
-- **[DOCKER.md](DOCKER.md)** - Complete Docker documentation
+- **[DEPLOY.md](DEPLOY.md)** - Production deployment & CI/CD workflow
+- **[DOCKER.md](DOCKER.md)** - Complete Docker & Nginx configuration
+- **[GITHUB_SETUP.md](GITHUB_SETUP.md)** - GitHub Container Registry (GHCR) setup
 
 ## 🛠️ Tech Stack
 
 - **Framework**: Next.js 14 (App Router)
 - **Database**: PostgreSQL + Prisma ORM
 - **Authentication**: NextAuth.js
-- **Styling**: Tailwind CSS
+- **Styling**: Tailwind CSS (Brutalist Newspaper Aesthetic)
 - **Deployment**: Docker + GitHub Actions + Watchtower
 - **Notifications**: Sonner
 
@@ -33,7 +36,7 @@ See [DEPLOY.md](DEPLOY.md) for full deployment guide.
 ### Prerequisites
 - Node.js 20+
 - PostgreSQL (or use Docker)
-- pnpm (recommended) or npm
+- pnpm (recommended), npm, or yarn
 
 ### Setup
 
@@ -45,7 +48,7 @@ See [DEPLOY.md](DEPLOY.md) for full deployment guide.
 2. **Configure environment**:
    ```bash
    cp .env.example .env
-   # Edit .env with your database credentials
+   # Edit .env with your local database credentials
    ```
 
 3. **Setup database**:
@@ -60,15 +63,17 @@ See [DEPLOY.md](DEPLOY.md) for full deployment guide.
    pnpm dev
    ```
 
-5. **Open** http://localhost:3000
+5. **Open** [http://localhost:3000](http://localhost:3000)
 
 ### Default Admin Credentials
 - **Username**: `admin`
 - **Password**: `admin123`
 
-⚠️ Change these immediately in production!
+⚠️ *Change these immediately in production!*
 
 ## 🐳 Docker Development
+
+For running the entire stack (App + Postgres) locally via Docker:
 
 ```bash
 # Start all containers
@@ -83,41 +88,39 @@ docker-compose down
 
 ## ✨ Features
 
-### Public Site
-- 📰 Article browsing with categories
-- 🔍 Search functionality
-- 📱 Responsive design
-- 🎨 Modern brutalist UI
+### 📰 Public Site
+- **Dynamic Articles**: Browse news by categories (Local, Crime, Politics, etc.)
+- **Brutalist UI**: High-contrast, newspaper-inspired design.
+- **Interactive Sidebar**: BAWSAQ stock ticker and Nazar's predictions.
+- **Article Sharing**: Social shares and print-friendly views.
 
-### Admin Panel (`/admin`)
-- 👥 **User Management** - Create, edit, delete users with role-based access
-- 📝 **Article Management** - Full CRUD operations with rich text editor
-- 🎯 **Ad Management** - Dynamic advertisement system
-- 👤 **Profile Management** - Update bio and display name
-- 🔐 **Role-Based Permissions** (ADMIN, CHIEF_EDITOR, EDITOR, AUTHOR)
+### 🔐 Admin Panel (`/admin`)
+- **User Management**: Role-based access control (ADMIN, CHIEF_EDITOR, EDITOR, AUTHOR).
+- **Article Management**: Full CRUD operations with a rich text editor.
+- **Ad System**: Manage dynamic advertisements across the site.
+- **Profile Management**: Update biographic info and display names.
 
 ## 📦 Project Structure
 
-```
+```text
 bcn/
 ├── app/                    # Next.js app directory
 │   ├── admin/             # Admin panel pages
 │   ├── (public)/          # Public pages
 │   └── api/               # API routes
-├── components/            # React components
-├── lib/                   # Utilities & configurations
-├── prisma/               # Database schema & migrations
-├── .github/workflows/    # GitHub Actions CI/CD
-└── public/               # Static assets
+├── components/            # Reusable UI components
+├── lib/                   # Shared utilities & Prisma client
+├── prisma/               # Schema definitions & seed scripts
+├── .github/workflows/    # CI/CD pipelines
+└── public/               # Static assets (images, icons)
 ```
 
 ## 🔒 Security
 
-- Password hashing with bcryptjs
-- Session-based authentication
-- Protected API routes
-- Role-based access control
-- Environment variable validation
+- Password hashing with `bcryptjs`.
+- Secure session-based authentication via NextAuth.
+- Protected API routes and role-based permissions at the page level.
+- Environment variable validation for production safety.
 
 ## 📄 License
 
