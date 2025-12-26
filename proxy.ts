@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth"
 import { NextResponse } from "next/server"
 
-// Middleware wrapper to protect routes
+// Proxy wrapper to protect routes
 export default auth((req) => {
     const isLoggedIn = !!req.auth
     const isOnAdmin = req.nextUrl.pathname.startsWith("/admin")
