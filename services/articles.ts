@@ -1,0 +1,38 @@
+import { prisma } from "@/lib/prisma";
+import { Article } from "@/types";
+
+// Helper to map Prisma article to our frontend Article type
+const mapPrismaArticle = (item: any): Article => ({
+    id: item.id,
+    title: item.title,
+    excerpt: item.excerpt,
+    content: item.content,
+    author: item.authorDisplay || item.author.username,
+    authorBio: item.author.bio,
+    date: item.createdAt.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' }),
+    category: item.category as any, // Cast to enum
+    imageUrl: item.image || undefined,
+    breaking: false, // Default for now, can add field to DB schema later
+});
+
+export async function getArticles() {
+    try {
+        const articles = await prisma.article.findMany({
+            where: { published: true },
+            include: { author: true },
+            orderBy: { createdAt: 'desc' }
+        });
+        return articles.map(mapPrismaArticle);
+    } catch (error) {
+        console.error("Failed to fetch articles:", error);
+        return [];
+    }
+}
+
+export async function getBreakingNews() {
+    // Logic to find breaking news, for now just the latest one or flagged
+    // Modify Schema to include 'breaking' boolean if needed.
+    // For now, let's just take the first one or leave it null if not implemented in schema yet.
+    // I added 'breaking' neither in schema nor seed.
+    return null;
+}

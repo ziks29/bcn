@@ -1,0 +1,54 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  CHIEF_EDITOR
+  EDITOR
+  AUTHOR
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  displayName String?
+  bio       String?
+  password  String
+  role      Role     @default(AUTHOR)
+  createdAt DateTime @default(now())
+  articles  Article[]
+}
+
+model Article {
+  id        String   @id @default(cuid())
+  title     String
+  slug      String   @unique
+  excerpt   String
+  content   String   @db.Text
+  image     String?
+  category  String
+  authorDisplay String @default("Редакция")
+  published Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  String
+}
+
+model Ad {
+  id        String   @id @default(cuid())
+  company   String
+  tagline   String
+  imageUrl  String
+  phone     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

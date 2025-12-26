@@ -13,6 +13,7 @@ export interface Article {
   excerpt: string;
   content: string; // HTML string for rich text simulation
   author: string;
+  authorBio?: string;
   date: string;
   category: Category;
   imageUrl?: string;
