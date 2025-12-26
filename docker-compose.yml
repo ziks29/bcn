@@ -45,10 +45,6 @@ services:
         condition: service_healthy
     networks:
       - bcn_network
-    command: >
-      sh -c "npx prisma migrate deploy &&
-             npx prisma db seed &&
-             node server.js"
 
 networks:
   bcn_network:
