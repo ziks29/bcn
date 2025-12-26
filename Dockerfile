@@ -69,8 +69,9 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/entrypoint.sh ./entrypoint.sh
-# Copy Prisma Client (pnpm stores it in .pnpm directory)
-COPY --from=builder /app/node_modules/.pnpm ./node_modules/
+
+# Install Prisma CLI globally so it's available in the runner
+RUN npm install -g prisma
 
 # Ensure entrypoint is executable in runner
 USER root
