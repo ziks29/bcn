@@ -4,19 +4,19 @@ import React, { useState, useEffect } from 'react';
 import Header from './Header';
 import Footer from './Footer';
 import Sidebar from './Sidebar';
-import ArticleView from './ArticleView';
+import Link from 'next/link';
 import { Article, Category, Ad } from '../types';
 import { ChevronRight } from 'lucide-react';
 
 interface NewsDashboardProps {
     initialArticles: Article[];
     initialAds: Ad[];
+    categories: string[];
 }
 
-const NewsDashboard: React.FC<NewsDashboardProps> = ({ initialArticles, initialAds }) => {
-    const [currentView, setCurrentView] = useState<'HOME' | 'ARTICLE' | 'CATEGORY'>('HOME');
-    const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
-    const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+const NewsDashboard: React.FC<NewsDashboardProps> = ({ initialArticles, initialAds, categories }) => {
+    const [currentView, setCurrentView] = useState<'HOME' | 'CATEGORY'>('HOME');
+    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [filteredArticles, setFilteredArticles] = useState<Article[]>(initialArticles);
 
     // Initial load effect
@@ -24,20 +24,20 @@ const NewsDashboard: React.FC<NewsDashboardProps> = ({ initialArticles, initialA
         window.scrollTo(0, 0);
     }, [currentView]);
 
-    const handleArticleClick = (article: Article) => {
-        setSelectedArticle(article);
-        setCurrentView('ARTICLE');
-    };
+    // const handleArticleClick = (article: Article) => {
+    //     setSelectedArticle(article);
+    //     setCurrentView('ARTICLE');
+    // };
 
-    const handleCategorySelect = (category: Category | 'HOME') => {
-        if (category === 'HOME') {
+    const handleCategorySelect = (categoryName: string | 'HOME') => {
+        if (categoryName === 'HOME') {
             setCurrentView('HOME');
             setFilteredArticles(initialArticles);
             setSelectedCategory(null);
         } else {
             setCurrentView('CATEGORY');
-            setSelectedCategory(category);
-            setFilteredArticles(initialArticles.filter(a => a.category === category));
+            setSelectedCategory(categoryName);
+            setFilteredArticles(initialArticles.filter(a => a.category === categoryName));
         }
     };
 
@@ -54,7 +54,7 @@ const NewsDashboard: React.FC<NewsDashboardProps> = ({ initialArticles, initialA
 
     return (
         <div className="min-h-screen flex flex-col font-serif-body bg-[#faf8f3] selection:bg-amber-200 selection:text-[#4b3634]">
-            <Header onCategorySelect={handleCategorySelect} />
+            <Header onCategorySelect={handleCategorySelect} categories={categories} />
 
             <main className="flex-grow container mx-auto px-4 py-8">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -62,78 +62,75 @@ const NewsDashboard: React.FC<NewsDashboardProps> = ({ initialArticles, initialA
                     {/* Main Content Area */}
                     <div className="lg:col-span-8 lg:border-r border-zinc-300 lg:pr-8">
 
-                        {currentView === 'ARTICLE' && selectedArticle ? (
-                            <ArticleView article={selectedArticle} onBack={() => handleCategorySelect(selectedCategory || 'HOME')} />
-                        ) : (
-                            <div className="animate-fade-in">
+                        {/* Article View Removed - Routing Implemented */}
+                        <div className="animate-fade-in">
 
-                                {/* Section Header */}
-                                <div className="flex items-baseline justify-between border-b-2 border-black mb-6 pb-2 px-2 md:px-0">
-                                    <h2 className="font-headline text-2xl md:text-3xl font-bold uppercase tracking-tight">
-                                        {selectedCategory ? selectedCategory : 'Заголовки'}
-                                    </h2>
-                                    {!selectedCategory && <span className="text-[#4b3634] text-[10px] md:text-xs font-bold uppercase tracking-widest animate-pulse">Свежие обновления</span>}
-                                </div>
+                            {/* Section Header */}
+                            <div className="flex items-baseline justify-between border-b-2 border-black mb-6 pb-2 px-2 md:px-0">
+                                <h2 className="font-headline text-2xl md:text-3xl font-bold uppercase tracking-tight">
+                                    {selectedCategory ? selectedCategory : 'Заголовки'}
+                                </h2>
+                                {!selectedCategory && <span className="text-[#4b3634] text-[10px] md:text-xs font-bold uppercase tracking-widest animate-pulse">Свежие обновления</span>}
+                            </div>
 
-                                {/* Breaking News Hero (Only on Home) */}
-                                {currentView === 'HOME' && breakingNews && (
-                                    <div className="mb-12 cursor-pointer group" onClick={() => handleArticleClick(breakingNews)}>
-                                        <div className="relative overflow-hidden mb-4 border-b-4 border-zinc-900">
-                                            <img
-                                                src={breakingNews.imageUrl}
-                                                alt={breakingNews.title}
-                                                className="w-full h-[400px] object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700"
-                                            />
-                                            <div className="absolute bottom-0 left-0 bg-[#4b3634] text-white px-3 py-1 text-xs font-bold uppercase tracking-widest">
-                                                Главная тема
-                                            </div>
-                                        </div>
-                                        <h2 className="text-4xl md:text-5xl font-newspaper font-bold text-zinc-900 leading-none mb-3 group-hover:text-[#4b3634] transition-colors">
-                                            {breakingNews.title}
-                                        </h2>
-                                        <p className="text-lg text-zinc-600 font-serif-body italic mb-2 border-l-4 border-zinc-300 pl-4">
-                                            {breakingNews.excerpt}
-                                        </p>
-                                        <div className="flex items-center text-xs font-sans text-zinc-400 uppercase tracking-wider">
-                                            <span className="font-bold text-zinc-900 mr-2">Автор: {breakingNews.author}</span>
-                                            <span>{breakingNews.date}</span>
+                            {/* Breaking News Hero (Only on Home) */}
+                            {currentView === 'HOME' && breakingNews && (
+                                <Link href={`/articles/${breakingNews.slug}`} className="mb-12 cursor-pointer group block">
+                                    <div className="relative overflow-hidden mb-4 border-b-4 border-zinc-900">
+                                        <img
+                                            src={breakingNews.imageUrl}
+                                            alt={breakingNews.title}
+                                            className="w-full h-[400px] object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700"
+                                        />
+                                        <div className="absolute bottom-0 left-0 bg-[#4b3634] text-white px-3 py-1 text-xs font-bold uppercase tracking-widest">
+                                            Главная тема
                                         </div>
                                     </div>
+                                    <h2 className="text-4xl md:text-5xl font-newspaper font-bold text-zinc-900 leading-none mb-3 group-hover:text-[#4b3634] transition-colors">
+                                        {breakingNews.title}
+                                    </h2>
+                                    <p className="text-lg text-zinc-600 font-serif-body italic mb-2 border-l-4 border-zinc-300 pl-4">
+                                        {breakingNews.excerpt}
+                                    </p>
+                                    <div className="flex items-center text-xs font-sans text-zinc-400 uppercase tracking-wider">
+                                        <span className="font-bold text-zinc-900 mr-2">Автор: {breakingNews.author}</span>
+                                        <span>{breakingNews.date}</span>
+                                    </div>
+                                </Link>
+                            )}
+
+                            {/* Article Grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-12">
+                                {otherNews.map((article) => (
+                                    <Link href={`/articles/${article.slug}`} key={article.id} className="group cursor-pointer flex flex-col">
+                                        {article.imageUrl && (
+                                            <div className="mb-3 overflow-hidden border border-zinc-200">
+                                                <img src={article.imageUrl} alt={article.title} className="w-full h-48 object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
+                                            </div>
+                                        )}
+                                        <div className="flex items-center space-x-2 mb-2">
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 border border-zinc-300 px-1">{article.category}</span>
+                                        </div>
+                                        <h3 className="text-2xl font-newspaper font-bold leading-tight mb-2 group-hover:underline decoration-[#4b3634] decoration-2 underline-offset-2">
+                                            {article.title}
+                                        </h3>
+                                        <p className="text-sm text-zinc-600 line-clamp-3 mb-3 flex-grow">
+                                            {article.excerpt}
+                                        </p>
+                                        <div className="mt-auto flex items-center text-[#4b3634] text-xs font-bold uppercase tracking-widest group-hover:translate-x-1 transition-transform">
+                                            Читать полностью <ChevronRight size={14} />
+                                        </div>
+                                    </Link>
+                                ))}
+
+                                {otherNews.length === 0 && (
+                                    <div className="col-span-2 py-12 text-center text-zinc-400 italic">
+                                        Отсутствие новостей — хорошие новости, верно? (В этой категории нет статей)
+                                    </div>
                                 )}
-
-                                {/* Article Grid */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-12">
-                                    {otherNews.map((article) => (
-                                        <div key={article.id} className="group cursor-pointer flex flex-col" onClick={() => handleArticleClick(article)}>
-                                            {article.imageUrl && (
-                                                <div className="mb-3 overflow-hidden border border-zinc-200">
-                                                    <img src={article.imageUrl} alt={article.title} className="w-full h-48 object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
-                                                </div>
-                                            )}
-                                            <div className="flex items-center space-x-2 mb-2">
-                                                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 border border-zinc-300 px-1">{article.category}</span>
-                                            </div>
-                                            <h3 className="text-2xl font-newspaper font-bold leading-tight mb-2 group-hover:underline decoration-[#4b3634] decoration-2 underline-offset-2">
-                                                {article.title}
-                                            </h3>
-                                            <p className="text-sm text-zinc-600 line-clamp-3 mb-3 flex-grow">
-                                                {article.excerpt}
-                                            </p>
-                                            <div className="mt-auto flex items-center text-[#4b3634] text-xs font-bold uppercase tracking-widest group-hover:translate-x-1 transition-transform">
-                                                Читать полностью <ChevronRight size={14} />
-                                            </div>
-                                        </div>
-                                    ))}
-
-                                    {otherNews.length === 0 && (
-                                        <div className="col-span-2 py-12 text-center text-zinc-400 italic">
-                                            Отсутствие новостей — хорошие новости, верно? (В этой категории нет статей)
-                                        </div>
-                                    )}
-                                </div>
-
                             </div>
-                        )}
+
+                        </div>
                     </div>
 
                     {/* Sidebar */}

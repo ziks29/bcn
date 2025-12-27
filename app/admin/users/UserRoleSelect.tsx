@@ -2,12 +2,13 @@
 
 import { updateUserRole } from "./actions";
 import { useTransition } from "react";
-import { Role } from "@prisma/client";
 import { toast } from "sonner";
+
+type Role = "ADMIN" | "CHIEF_EDITOR" | "EDITOR" | "AUTHOR" | "DISABLED";
 
 interface UserRoleSelectProps {
     userId: string;
-    currentRole: Role;
+    currentRole: Role | string;
     disabled?: boolean;
 }
 
@@ -44,6 +45,7 @@ export default function UserRoleSelect({ userId, currentRole, disabled }: UserRo
             <option value="CHIEF_EDITOR">CHIEF</option>
             <option value="EDITOR">EDITOR</option>
             <option value="AUTHOR">AUTHOR</option>
+            <option value="DISABLED">DISABLED</option>
         </select>
     );
 }

@@ -7,21 +7,15 @@ import ArticleEditorInput from "@/components/ArticleEditorInput";
 import ImageUpload from "@/components/ImageUpload";
 import { ArticleForm } from "../../ArticleForm";
 
-// Enum values for selection
-const CATEGORIES = [
-    "Местные новости",
-    "Криминал",
-    "Политика",
-    "Мнение",
-    "Бизнес и Мет",
-    "Стиль жизни"
-];
-
 export default async function EditArticlePage(props: { params: Promise<{ id: string }> }) {
     const params = await props.params;
     const { id } = params;
     const session = await auth();
     if (!session) redirect("/login");
+
+    const categories = await prisma.category.findMany({
+        orderBy: { createdAt: 'asc' }
+    });
 
     const article = await prisma.article.findUnique({
         where: { id },
@@ -63,7 +57,7 @@ export default async function EditArticlePage(props: { params: Promise<{ id: str
                                     className="w-full border-2 border-black p-2 bg-white"
                                     required
                                 >
-                                    {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                                    {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
                                 </select>
                             </div>
                             <div>
@@ -71,6 +65,36 @@ export default async function EditArticlePage(props: { params: Promise<{ id: str
                                 <input
                                     name="authorDisplay"
                                     defaultValue={article.authorDisplay}
+                                    className="w-full border-2 border-black p-2"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold uppercase tracking-widest mb-1">Статус публикации</label>
+                            <select name="status" className="w-full border-2 border-black p-2 bg-white" defaultValue={(article as any).status || "DRAFT"}>
+                                <option value="DRAFT">Черновик</option>
+                                <option value="PENDING">На рассмотрении</option>
+                                <option value="PUBLISHED">Опубликовано</option>
+                            </select>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-xs font-bold uppercase tracking-widest mb-1">Опубликовать с (необязательно)</label>
+                                <input
+                                    type="datetime-local"
+                                    name="publishFrom"
+                                    defaultValue={(article as any).publishFrom ? new Date((article as any).publishFrom).toISOString().slice(0, 16) : ""}
+                                    className="w-full border-2 border-black p-2"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold uppercase tracking-widest mb-1">Опубликовать до (необязательно)</label>
+                                <input
+                                    type="datetime-local"
+                                    name="publishTo"
+                                    defaultValue={(article as any).publishTo ? new Date((article as any).publishTo).toISOString().slice(0, 16) : ""}
                                     className="w-full border-2 border-black p-2"
                                 />
                             </div>

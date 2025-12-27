@@ -1,20 +1,33 @@
+"use client";
+
 import React from 'react';
 import { Article } from '../types';
 import { ArrowLeft, Share2, Printer, Clock } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface ArticleViewProps {
   article: Article;
-  onBack: () => void;
+  onBack?: () => void;
 }
 
 const ArticleView: React.FC<ArticleViewProps> = ({ article, onBack }) => {
+  const router = useRouter();
+
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+    } else {
+      router.back();
+    }
+  };
+
   return (
     <article className="animate-fade-in">
       <button
-        onClick={onBack}
+        onClick={handleBack}
         className="flex items-center text-[#4b3634] font-bold uppercase text-xs tracking-widest mb-6 hover:underline"
       >
-        <ArrowLeft size={14} className="mr-1" /> Назад к заголовкам
+        <ArrowLeft size={14} className="mr-1" /> Назад
       </button>
 
       <header className="mb-8 border-b-2 border-zinc-200 pb-8">

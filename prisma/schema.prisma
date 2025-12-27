@@ -4,15 +4,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
-}
-
-enum Role {
-  ADMIN
-  CHIEF_EDITOR
-  EDITOR
-  AUTHOR
 }
 
 model User {
@@ -21,7 +14,8 @@ model User {
   displayName String?
   bio       String?
   password  String
-  role      Role     @default(AUTHOR)
+  role      String   @default("AUTHOR")
+  approved  Boolean  @default(false)
   createdAt DateTime @default(now())
   articles  Article[]
 }
@@ -31,11 +25,13 @@ model Article {
   title     String
   slug      String   @unique
   excerpt   String
-  content   String   @db.Text
+  content   String
   image     String?
   category  String
   authorDisplay String @default("Редакция")
-  published Boolean  @default(true)
+  status    String   @default("DRAFT")
+  publishFrom DateTime?
+  publishTo   DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
@@ -49,6 +45,25 @@ model Ad {
   tagline   String
   imageUrl  String
   phone     String
+  bw        Boolean  @default(true)
+  status    String   @default("DRAFT")
+  publishFrom DateTime?
+  publishTo   DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model GalleryItem {
+  id        String   @id @default(cuid())
+  url       String
+  name      String?
+  type      String   @default("UPLOAD") // "UPLOAD" or "EXTERNAL"
+  createdAt DateTime @default(now())
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now())
 }

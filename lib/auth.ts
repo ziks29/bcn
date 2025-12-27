@@ -39,6 +39,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     return null
                 }
 
+                // Check if user is approved
+                if (!user.approved) {
+                    throw new Error("AccountNotApproved")
+                }
+
+                // Check if user is disabled
+                if (user.role === "DISABLED") {
+                    throw new Error("AccessDenied")
+                }
+
                 return {
                     id: user.id,
                     name: user.displayName || user.username,

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createAd } from "../../actions";
 import { AdForm } from "../AdForm";
+import ImageUpload from "@/components/ImageUpload";
 
 export default async function NewAdPage() {
     const session = await auth();
@@ -28,14 +29,45 @@ export default async function NewAdPage() {
                             <textarea name="tagline" required rows={2} className="w-full border-2 border-black p-2" placeholder="\u0411\u0440\u043e\u0441\u043a\u0438\u0439 \u0441\u043b\u043e\u0433\u0430\u043d..."></textarea>
                         </div>
 
+                        <div>
+                            <label className="block text-xs font-bold uppercase tracking-widest mb-1">Изображение</label>
+                            <ImageUpload name="imageUrl" />
+                            <div className="mt-2 flex items-center gap-2">
+                                <input type="checkbox" name="bw" id="bw" defaultChecked className="w-4 h-4 accent-black" />
+                                <label htmlFor="bw" className="text-sm font-bold uppercase cursor-pointer select-none">Черно-белое</label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold uppercase tracking-widest mb-1">Телефон</label>
+                            <input name="phone" required className="w-full border-2 border-black p-2" placeholder="555-0100" />
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold uppercase tracking-widest mb-1">Статус публикации</label>
+                            <select name="status" className="w-full border-2 border-black p-2 bg-white" defaultValue="DRAFT">
+                                <option value="DRAFT">Черновик</option>
+                                <option value="PENDING">На рассмотрении</option>
+                                <option value="PUBLISHED">Опубликовано</option>
+                            </select>
+                        </div>
+
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-xs font-bold uppercase tracking-widest mb-1">\u0422\u0435\u043b\u0435\u0444\u043e\u043d</label>
-                                <input name="phone" required className="w-full border-2 border-black p-2" placeholder="555-0100" />
+                                <label className="block text-xs font-bold uppercase tracking-widest mb-1">Показывать с (необязательно)</label>
+                                <input
+                                    type="datetime-local"
+                                    name="publishFrom"
+                                    className="w-full border-2 border-black p-2"
+                                />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold uppercase tracking-widest mb-1">\u0418\u0437\u043e\u0431\u0440\u0430\u0436\u0435\u043d\u0438\u0435 (URL)</label>
-                                <input name="imageUrl" required className="w-full border-2 border-black p-2 font-mono text-sm" placeholder="https://..." />
+                                <label className="block text-xs font-bold uppercase tracking-widest mb-1">Показывать до (необязательно)</label>
+                                <input
+                                    type="datetime-local"
+                                    name="publishTo"
+                                    className="w-full border-2 border-black p-2"
+                                />
                             </div>
                         </div>
                     </div>

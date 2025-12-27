@@ -2,11 +2,10 @@
 
 import { deleteUser } from "./actions";
 import { toast } from "sonner";
-import { Role } from "@prisma/client";
 
 interface DeleteUserButtonProps {
     userId: string;
-    role: Role;
+    role: string;
     currentUserRole: string; // "ADMIN" or "CHIEF_EDITOR" passed as string
     adminCount: number;
     isCurrentUser: boolean;

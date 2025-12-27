@@ -5,6 +5,14 @@ const nextConfig = {
         // Optimize for production
         optimizePackageImports: ['lucide-react'],
     },
+    images: {
+        remotePatterns: [
+            {
+                protocol: "https",
+                hostname: "**",
+            },
+        ],
+    },
 }
 
 export default nextConfig

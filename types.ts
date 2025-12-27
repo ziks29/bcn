@@ -1,24 +1,20 @@
-export enum Category {
-  LOCAL = "Местные новости",
-  CRIME = "Криминал",
-  POLITICS = "Политика",
-  OPINION = "Мнение",
-  BUSINESS = "Бизнес и Мет",
-  LIFESTYLE = "Стиль жизни"
-}
+export type Category = string;
 
 export interface Article {
   id: string;
+  slug: string;
   title: string;
   excerpt: string;
   content: string; // HTML string for rich text simulation
   author: string;
   authorBio?: string;
   date: string;
-  category: Category;
+  category: string;
   imageUrl?: string;
   imageCaption?: string;
   breaking?: boolean;
+  status?: string;
+  authorId?: string;
 }
 
 export interface Ad {
@@ -27,6 +23,10 @@ export interface Ad {
   tagline: string;
   imageUrl: string;
   phone: string;
+  bw?: boolean;
+  status?: string;
+  publishFrom?: Date | null;
+  publishTo?: Date | null;
 }
 
 export interface Stock {

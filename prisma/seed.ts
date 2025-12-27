@@ -13,7 +13,7 @@ const ARTICLES = [
         category: "Местные новости",
         slug: "chaos-at-chicken-festival",
         image: "https://picsum.photos/seed/chicken/800/400",
-        published: true
+        status: "PUBLISHED"
     },
     {
         title: "Благотворительность 'Lost MC' вызывает подозрения",
@@ -23,7 +23,7 @@ const ARTICLES = [
         category: "Криминал",
         slug: "lost-mc-charity-suspicion",
         image: "https://picsum.photos/seed/biker/600/400",
-        published: true
+        status: "PUBLISHED"
     },
     {
         title: "Уровень воды в Аламо-Си падает, обнажая больше машин",
@@ -33,7 +33,7 @@ const ARTICLES = [
         category: "Стиль жизни",
         slug: "alamo-sea-water-levels",
         image: "https://picsum.photos/seed/lake/600/400",
-        published: true
+        status: "PUBLISHED"
     },
     {
         title: "Мнение: Почему ограничение скорости на Трассе 68 — это тирания",
@@ -43,7 +43,7 @@ const ARTICLES = [
         category: "Мнение",
         slug: "route-68-speed-limit-tyranny",
         image: "https://picsum.photos/seed/road/600/400",
-        published: true
+        status: "PUBLISHED"
     },
     {
         title: "Цены на мет стабилизировались после взрыва лаборатории",
@@ -53,7 +53,7 @@ const ARTICLES = [
         category: "Бизнес и Мет",
         slug: "meth-prices-stabilize",
         image: "https://picsum.photos/seed/fire/600/400",
-        published: true
+        status: "PUBLISHED"
     }
 ]
 
@@ -70,11 +70,20 @@ async function main() {
                 username: 'admin',
                 password: hashedPassword,
                 role: 'ADMIN',
+                approved: true,
+                displayName: 'Администратор',
             },
         })
         console.log('Created default admin user')
     } else {
-        console.log(`Found existing admin user: ${admin.username}`)
+        admin = await prisma.user.update({
+            where: { id: admin.id },
+            data: {
+                approved: true,
+                displayName: admin.displayName || 'Администратор'
+            }
+        })
+        console.log(`Found and updated existing admin user: ${admin.username} (approved: true)`)
     }
 
     console.log({ admin })
@@ -84,7 +93,9 @@ async function main() {
         const { author, ...articleData } = article
         const createdArticle = await prisma.article.upsert({
             where: { slug: article.slug },
-            update: {},
+            update: {
+                status: "PUBLISHED" // Update existing articles to PUBLISHED
+            },
             create: {
                 ...articleData,
                 authorDisplay: author,
@@ -92,7 +103,7 @@ async function main() {
             },
         })
 
-        console.log(`Created article: ${createdArticle.title}`)
+        console.log(`Upserted article: ${createdArticle.title}`)
     }
 
     // 3. Create Ads
@@ -119,7 +130,10 @@ async function main() {
 
     for (const ad of ADS) {
         await prisma.ad.create({
-            data: ad
+            data: {
+                ...ad,
+                status: "PUBLISHED"
+            }
         })
         console.log(`Created ad: ${ad.company}`)
     }

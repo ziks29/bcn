@@ -4,6 +4,7 @@ import Link from "next/link";
 import { updateAd } from "../../../actions";
 import { prisma } from "@/lib/prisma";
 import { AdForm } from "../../AdForm";
+import ImageUpload from "@/components/ImageUpload";
 
 export default async function EditAdPage(props: { params: Promise<{ id: string }> }) {
     const params = await props.params;
@@ -54,25 +55,58 @@ export default async function EditAdPage(props: { params: Promise<{ id: string }
                             ></textarea>
                         </div>
 
+                        <div>
+                            <label className="block text-xs font-bold uppercase tracking-widest mb-1">Изображение</label>
+                            <ImageUpload name="imageUrl" defaultValue={ad.imageUrl} />
+                            <div className="mt-2 flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    name="bw"
+                                    id="bw"
+                                    defaultChecked={ad.bw}
+                                    className="w-4 h-4 accent-black"
+                                />
+                                <label htmlFor="bw" className="text-sm font-bold uppercase cursor-pointer select-none">Черно-белое</label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold uppercase tracking-widest mb-1">Телефон</label>
+                            <input
+                                name="phone"
+                                required
+                                defaultValue={ad.phone}
+                                className="w-full border-2 border-black p-2"
+                                placeholder="555-0100"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold uppercase tracking-widest mb-1">Статус публикации</label>
+                            <select name="status" className="w-full border-2 border-black p-2 bg-white" defaultValue={(ad as any).status || "DRAFT"}>
+                                <option value="DRAFT">Черновик</option>
+                                <option value="PENDING">На рассмотрении</option>
+                                <option value="PUBLISHED">Опубликовано</option>
+                            </select>
+                        </div>
+
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-xs font-bold uppercase tracking-widest mb-1">Телефон</label>
+                                <label className="block text-xs font-bold uppercase tracking-widest mb-1">Показывать с (необязательно)</label>
                                 <input
-                                    name="phone"
-                                    required
-                                    defaultValue={ad.phone}
+                                    type="datetime-local"
+                                    name="publishFrom"
+                                    defaultValue={(ad as any).publishFrom ? new Date((ad as any).publishFrom).toISOString().slice(0, 16) : ""}
                                     className="w-full border-2 border-black p-2"
-                                    placeholder="555-0100"
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold uppercase tracking-widest mb-1">Изображение (URL)</label>
+                                <label className="block text-xs font-bold uppercase tracking-widest mb-1">Показывать до (необязательно)</label>
                                 <input
-                                    name="imageUrl"
-                                    required
-                                    defaultValue={ad.imageUrl}
-                                    className="w-full border-2 border-black p-2 font-mono text-sm"
-                                    placeholder="https://..."
+                                    type="datetime-local"
+                                    name="publishTo"
+                                    defaultValue={(ad as any).publishTo ? new Date((ad as any).publishTo).toISOString().slice(0, 16) : ""}
+                                    className="w-full border-2 border-black p-2"
                                 />
                             </div>
                         </div>

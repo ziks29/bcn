@@ -113,7 +113,7 @@ const Sidebar: React.FC<SidebarProps> = ({ ads }) => {
         {ads.map((ad) => (
           <div key={ad.id} className="border-4 border-[#4b3634] p-2 bg-white">
             <div className="border border-[#4b3634]/30 p-2 text-center">
-              <img src={ad.imageUrl} alt={ad.company} className="w-full h-32 object-cover grayscale contrast-125 mb-2" />
+              <img src={ad.imageUrl} alt={ad.company} className={`w-full h-32 object-cover contrast-125 mb-2 ${ad.bw ? 'grayscale' : ''}`} />
               <h4 className="font-headline font-bold text-lg uppercase text-[#4b3634]">{ad.company}</h4>
               <p className="font-serif-body text-xs italic mb-2 text-[#4b3634]/80">"{ad.tagline}"</p>
               <div className="bg-[#4b3634] text-[#faf8f3] text-sm font-bold py-1 px-2 inline-block transform -rotate-2">

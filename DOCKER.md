@@ -1,16 +1,15 @@
 # Docker Setup for BCN News Application
 
 ## Overview
-This project is configured with **2 Docker containers**:
-1. **PostgreSQL Database** - Stores application data
-2. **Next.js Application** - Main web application
+This project uses **SQLite** as the database with a single Docker container:
+1. **Next.js Application** - Main web application with embedded SQLite database
 
 ## System Architecture
 
 ```mermaid
 graph LR
-    A[User] -->|Port 3000| B[Next.js App Container]
-    B -->|Internal Network| C[PostgreSQL Container]
+    A[User] -->|Port 9999| B[Next.js App Container]
+    B -->|Reads/Writes| C[SQLite Database File]
     C -->|Persistent Storage| D[Docker Volume]
 ```
 
@@ -18,13 +17,13 @@ graph LR
 
 - Docker Desktop installed and running
 - Docker Compose v3.8+
-- At least 2GB of available RAM
+- At least 1GB of available RAM
 
 ## Quick Start
 
-### 1. Start Both Containers
+### 1. Start Container
 ```bash
-npm run docker:up
+pnpm docker:up
 ```
 or
 ```bash
@@ -33,16 +32,16 @@ docker-compose up -d
 
 ### 2. View Logs
 ```bash
-npm run docker:logs
+pnpm docker:logs
 ```
 or
 ```bash
 docker-compose logs -f
 ```
 
-### 3. Stop Containers
+### 3. Stop Container
 ```bash
-npm run docker:down
+pnpm docker:down
 ```
 or
 ```bash
@@ -51,23 +50,22 @@ docker-compose down
 
 ## Local Development (pnpm dev)
 
-If you want to run the application locally using `pnpm dev` but use a Dockerized PostgreSQL database, follow these steps:
+With SQLite, local development is much simpler - no Docker required!
 
-### 1. Start the Database Only
-```bash
-npm run db:up
-```
-This starts only the `bcn_postgres` container.
-
-### 2. Configure .env
-Ensure your `.env` file uses `localhost` for the connection:
+### 1. Configure .env
+Ensure your `.env` file uses SQLite:
 ```env
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/bcn_news?schema=public"
+DATABASE_URL="file:./prisma/dev.db"
 ```
 
-### 3. Run Prisma Migrations
+### 2. Initialize Database
 ```bash
-npx prisma migrate dev
+npx prisma db push
+```
+
+### 3. Seed Database
+```bash
+npx prisma db seed
 ```
 
 ### 4. Start Development Server
@@ -75,77 +73,53 @@ npx prisma migrate dev
 pnpm dev
 ```
 
-### 5. Stop the Database
-```bash
-npm run db:down
-```
-
 ## Available Commands
 
 | Command | Description |
 |---------|-------------|
-| `npm run docker:build` | Build Docker images |
-| `npm run docker:up` | Start containers in detached mode |
-| `npm run docker:down` | Stop and remove containers |
-| `npm run docker:logs` | View container logs |
+| `pnpm docker:build` | Build Docker image |
+| `pnpm docker:up` | Start container in detached mode |
+| `pnpm docker:down` | Stop and remove container |
+| `pnpm docker:logs` | View container logs |
 
 ## Container Details
 
-### Container 1: PostgreSQL (bcn_postgres)
-- **Image**: `postgres:15-alpine`
-- **Port**: `5432`
-- **Volume**: `postgres_data` (persistent storage)
-- **Health Check**: Checks database readiness every 10s
-- **Environment Variables**:
-  - `POSTGRES_USER`: postgres
-  - `POSTGRES_PASSWORD`: postgres
-  - `POSTGRES_DB`: bcn_news
-
-### Container 2: Next.js App (bcn_app)
+### Next.js App (bcn_app)
 - **Build**: Multi-stage Dockerfile
-- **Port**: `3000`
-- **Depends On**: PostgreSQL (waits for health check)
+- **Port**: `9999` (mapped to internal 3000)
+- **Database**: SQLite file at `./prisma/prod.db`
+- **Volume**: `sqlite_data` mounted at `/app/prisma` for persistence
 - **Startup Process**:
-  1. Waits for PostgreSQL to be healthy
-  2. Runs database migrations (`prisma migrate deploy`)
-  3. Seeds the database (`prisma db seed`)
-  4. Starts the Next.js server
+  1. Syncs database schema (`prisma db push`)
+  2. Starts the Next.js server
 
 ## Environment Variables
 
-The containers use the `.env` file for configuration:
+The container uses environment variables for configuration:
 
 ```env
-# Database
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_DB=bcn_news
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/bcn_news?schema=public"
+# Database (SQLite)
+DATABASE_URL="file:./prisma/prod.db"
 
 # Next Auth
 NEXTAUTH_SECRET="super-secret-development-key-change-in-prod"
-NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_URL="http://localhost:9999"
+
+# Admin Secret
+ADMIN_SECRET="change-this-to-secure-secret"
 ```
-
-> **Note**: When running in Docker, the app container uses `@postgres` instead of `@localhost` in the DATABASE_URL.
-
-## Networking
-
-Both containers are connected via a custom bridge network (`bcn_network`):
-- Containers can communicate using service names (e.g., `postgres:5432`)
-- Isolated from other Docker networks
-- Secure internal communication
 
 ## Data Persistence
 
-PostgreSQL data is stored in a Docker volume:
-- **Volume Name**: `postgres_data`
-- **Location**: `/var/lib/postgresql/data` (inside container)
+SQLite database is stored in a Docker volume:
+- **Volume Name**: `sqlite_data`
+- **Location**: `/app/prisma` (inside container)
+- **Database File**: `prod.db`
 - **Persistence**: Data survives container restarts and rebuilds
 
 ## Troubleshooting
 
-### Containers won't start
+### Container won't start
 ```bash
 # Check container status
 docker ps -a
@@ -154,13 +128,13 @@ docker ps -a
 docker-compose logs
 ```
 
-### Database connection issues
+### Database issues
 ```bash
-# Check PostgreSQL health
-docker exec bcn_postgres pg_isready -U postgres
+# Check database file
+docker exec bcn_app ls -la /app/prisma/
 
-# Connect to PostgreSQL directly
-docker exec -it bcn_postgres psql -U postgres -d bcn_news
+# Reinitialize database
+docker exec bcn_app npx prisma db push
 ```
 
 ### Reset everything
@@ -169,15 +143,15 @@ docker exec -it bcn_postgres psql -U postgres -d bcn_news
 docker-compose down -v
 
 # Rebuild and restart
-npm run docker:build
-npm run docker:up
+pnpm docker:build
+pnpm docker:up
 ```
 
 ### Port already in use
-If port 3000 or 5432 is already in use:
-```bash
-# Stop local development servers
-# Or modify ports in docker-compose.yml
+If port 9999 is already in use, modify `docker-compose.yml`:
+```yaml
+ports:
+  - "8888:3000"  # Change 9999 to any available port
 ```
 
 ## Production Deployment
@@ -185,12 +159,10 @@ If port 3000 or 5432 is already in use:
 ### Standard Deployment
 
 For production:
-1. Update `NEXTAUTH_SECRET` with a secure random string
-2. Update `POSTGRES_PASSWORD` with a strong password
-3. Update `NEXTAUTH_URL` to your production domain (https://blainenews.n9xo.xyz)
-4. Consider using Docker secrets for sensitive data
-5. Add SSL/TLS certificates
-6. Configure a reverse proxy (nginx, Caddy)
+1. Update `NEXTAUTH_SECRET` with a secure random string (use: `openssl rand -base64 32`)
+2. Update `NEXTAUTH_URL` to your production domain (https://blainenews.n9xo.xyz)
+3. Ensure Docker volume is backed up regularly
+4. Configure a reverse proxy (nginx, Caddy) with SSL/TLS
 
 ### Watchtower Auto-Deployment with GitHub
 
@@ -220,7 +192,7 @@ The project uses **GitHub Actions** for automatic Docker builds and **Watchtower
    GITHUB_REPOSITORY=your-github-username/bcn
    ```
 
-4. **Start Containers**:
+4. **Start Container**:
    ```bash
    docker-compose up -d
    ```
@@ -277,35 +249,69 @@ The Dockerfile uses multi-stage builds for optimization:
 2. **builder**: Generates Prisma client and builds Next.js
 3. **runner**: Production runtime (minimal, optimized)
 
-This results in a smaller final image (~200MB vs ~1GB).
+This results in a smaller final image (~180MB).
 
 ## Accessing the Application
 
-Once containers are running:
-- **Web Application**: http://localhost:3000
-- **Database**: `localhost:5432` (from host machine)
+Once container is running:
+- **Web Application**: http://localhost:9999
+- **Database**: SQLite file inside container (use docker exec to access)
 
-## Health Checks
+## Database Backup & Restore
 
-PostgreSQL container includes health checks:
-- Runs every 10 seconds
-- Times out after 5 seconds
-- Retries up to 5 times
-- Next.js container waits for healthy status before starting
+### Backup database
+```bash
+# Copy SQLite database from container to host
+docker cp bcn_app:/app/prisma/prod.db ./backup-$(date +%Y%m%d).db
+```
+
+### Restore database
+```bash
+# Copy backup into container
+docker cp ./backup-20250101.db bcn_app:/app/prisma/prod.db
+
+# Restart container
+docker-compose restart app
+```
+
+### Automated Backups
+Consider setting up a cron job for regular backups:
+```bash
+# Add to crontab (daily backup at 2am)
+0 2 * * * docker cp bcn_app:/app/prisma/prod.db /backups/bcn-$(date +\%Y\%m\%d).db
+```
 
 ## Maintenance
 
 ### View container stats
 ```bash
-docker stats bcn_postgres bcn_app
+docker stats bcn_app
 ```
 
-### Backup database
+### Access container shell
 ```bash
-docker exec bcn_postgres pg_dump -U postgres bcn_news > backup.sql
+docker exec -it bcn_app sh
 ```
 
-### Restore database
+### View database file
 ```bash
-docker exec -i bcn_postgres psql -U postgres bcn_news < backup.sql
+docker exec bcn_app ls -lh /app/prisma/prod.db
 ```
+
+## SQLite vs PostgreSQL
+
+This project now uses SQLite for simplified deployment. Benefits:
+
+✅ **Simpler setup** - No separate database container
+✅ **Easier backups** - Single file to backup
+✅ **Lower resource usage** - Less memory and CPU
+✅ **Faster local development** - No Docker needed
+✅ **Portability** - Database file can be easily moved
+
+Limitations to be aware of:
+
+⚠️ **Concurrent writes** - Lower than PostgreSQL
+⚠️ **Network access** - Database must be on same machine
+⚠️ **Scaling** - Better for small to medium traffic sites
+
+For this news site with primarily read operations, SQLite is an excellent choice.

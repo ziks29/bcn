@@ -4,6 +4,7 @@ import { Article } from "@/types";
 // Helper to map Prisma article to our frontend Article type
 const mapPrismaArticle = (item: any): Article => ({
     id: item.id,
+    slug: item.slug,
     title: item.title,
     excerpt: item.excerpt,
     content: item.content,
@@ -13,12 +14,14 @@ const mapPrismaArticle = (item: any): Article => ({
     category: item.category as any, // Cast to enum
     imageUrl: item.image || undefined,
     breaking: false, // Default for now, can add field to DB schema later
+    status: item.status,
+    authorId: item.authorId,
 });
 
 export async function getArticles() {
     try {
         const articles = await prisma.article.findMany({
-            where: { published: true },
+            where: { status: "PUBLISHED" },
             include: { author: true },
             orderBy: { createdAt: 'desc' }
         });
@@ -30,6 +33,22 @@ export async function getArticles() {
     } catch (error) {
         console.error("Failed to fetch articles:", error);
         return [];
+    }
+}
+
+export async function getArticleBySlug(slug: string) {
+    try {
+        const article = await prisma.article.findUnique({
+            where: { slug: slug },
+            include: { author: true },
+        });
+
+        if (!article) return null;
+
+        return mapPrismaArticle(article);
+    } catch (error) {
+        console.error("Failed to fetch article by slug:", error);
+        return null;
     }
 }
 

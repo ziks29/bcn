@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from 'react';
 import { Menu, Search, Sun, CloudRain, X } from 'lucide-react';
 import Link from 'next/link';
@@ -5,10 +7,11 @@ import { useSession } from 'next-auth/react';
 import { Category } from '../types';
 
 interface HeaderProps {
-  onCategorySelect: (category: Category | 'HOME') => void;
+  onCategorySelect: (categoryName: string | 'HOME') => void;
+  categories: string[];
 }
 
-const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
+const Header: React.FC<HeaderProps> = ({ onCategorySelect, categories }) => {
   const { data: session } = useSession();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   // Use Russian locale for date
@@ -16,8 +19,8 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
-  const handleMobileNavClick = (category: Category | 'HOME') => {
-    onCategorySelect(category);
+  const handleMobileNavClick = (categoryName: string | 'HOME') => {
+    onCategorySelect(categoryName);
     setIsMenuOpen(false);
   };
 
@@ -25,14 +28,14 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
     <>
       <header className="bg-[#faf8f3]">
         {/* Top Bar */}
-        <div className="text-xs font-sans grid grid-cols-1 md:grid-cols-[1fr_2fr_1fr] items-center border-b border-zinc-200 md:border-none">
+        <div className="text-xs font-sans md:font-headline grid grid-cols-1 md:grid-cols-[1fr_2fr_1fr] items-center border-b border-zinc-200 md:border-none">
           <div className="bg-[#4b3634] text-[#faf8f3] p-2 pl-4 text-center md:text-left">
-            <span className="font-bold uppercase tracking-wider">{currentDate}</span>
+            <span className="font-headline md:font-sans font-bold uppercase tracking-wider">{currentDate}</span>
           </div>
-          <p className="hidden md:block text-center font-bold uppercase tracking-wider text-lg font-headline">
+          <p className="hidden md:block text-center uppercase tracking-wider text-lg font-headline">
             СДЕЛАЕМ НОВОСТИ ВЕЛИКИМИ СНОВА
           </p>
-          <div className="p-2 bg-[#4b3634] text-[#faf8f3] pr-4 h-full flex justify-center md:justify-end items-center">
+          <div className="p-2 bg-[#4b3634] text-[#faf8f3] pr-4 h-full hidden md:flex justify-end items-center">
             {session ? (
               <Link href="/admin" className="hover:text-amber-700 hover:underline transition-colors uppercase font-bold tracking-wider">
                 Редакторская
@@ -73,7 +76,7 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
               letterSpacing: '0.03em',
             }}
           >
-            Blaine Gazette
+            Blaine County Gazette
           </h1>
 
           <div className="absolute right-4 top-1/2 -translate-y-1/2 md:block hidden">
@@ -98,19 +101,13 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
 
           {/* Desktop Nav */}
           <ul className="hidden md:flex justify-center space-x-8 font-serif-body font-bold text-sm tracking-widest uppercase">
-            <li
-              className="cursor-pointer hover:text-amber-700 hover:underline decoration-2 underline-offset-4"
-              onClick={() => onCategorySelect('HOME')}
-            >
-              Главная
-            </li>
-            {Object.values(Category).map((cat) => (
+            {categories.map((catName) => (
               <li
-                key={cat}
+                key={catName}
                 className="cursor-pointer hover:text-amber-700 hover:underline decoration-2 underline-offset-4"
-                onClick={() => onCategorySelect(cat)}
+                onClick={() => onCategorySelect(catName)}
               >
-                {cat}
+                {catName}
               </li>
             ))}
           </ul>
@@ -120,19 +117,13 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
         {isMenuOpen && (
           <div className="md:hidden bg-[#faf8f3] text-zinc-900 absolute top-full left-0 w-full border-b-4 border-[#4b3634] animate-fade-in shadow-2xl">
             <ul className="flex flex-col p-4 space-y-2 font-serif-body font-bold text-lg tracking-widest uppercase">
-              <li
-                className="cursor-pointer hover:bg-zinc-200 p-3 border-b border-zinc-200"
-                onClick={() => handleMobileNavClick('HOME')}
-              >
-                Главная
-              </li>
-              {Object.values(Category).map((cat) => (
+              {categories.map((catName) => (
                 <li
-                  key={cat}
+                  key={catName}
                   className="cursor-pointer hover:bg-zinc-200 p-3 border-b border-zinc-200"
-                  onClick={() => handleMobileNavClick(cat)}
+                  onClick={() => handleMobileNavClick(catName)}
                 >
-                  {cat}
+                  {catName}
                 </li>
               ))}
               <li className="pt-4 flex justify-between items-center text-[10px] text-zinc-400 font-sans tracking-normal uppercase">

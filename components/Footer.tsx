@@ -21,7 +21,7 @@ const Footer: React.FC = () => {
               letterSpacing: '0.03em',
             }}
           >
-            Blaine Gazette
+            Blaine County Gazette
           </h2>
           <p className="font-serif-body text-zinc-400 text-sm max-w-md">
             Мы приносим вам новости, которые элита Вайнвуда не хочет, чтобы вы слышали.

@@ -10,6 +10,13 @@ export default async function Home() {
     const ads = await prisma.ad.findMany({
         orderBy: { createdAt: "desc" },
     });
+    const categories = await prisma.category.findMany({
+        orderBy: { createdAt: 'asc' }
+    });
 
-    return <NewsDashboard initialArticles={articles} initialAds={ads} />;
+    return <NewsDashboard
+        initialArticles={articles}
+        initialAds={ads}
+        categories={categories.map(c => c.name)}
+    />;
 }

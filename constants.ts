@@ -35,6 +35,7 @@ export const ADS: Ad[] = [
 export const ARTICLES: Article[] = [
   {
     id: '1',
+    slug: 'chaos-at-chicken-festival',
     title: "Хаос на Курином Фестивале в Палето Бэй",
     excerpt: "Празднование дня домашней птицы закончилось погоней на тракторе и похищением трёх призовых несушек.",
     content: `
@@ -45,13 +46,14 @@ export const ARTICLES: Article[] = [
     `,
     author: "Рон Яковски",
     date: "24 окт. 2023",
-    category: Category.LOCAL,
+    category: "Местные новости",
     imageUrl: "https://picsum.photos/seed/chicken/800/400",
     imageCaption: "Последствия «Великого Куриного Освобождения» 2023 года.",
     breaking: true
   },
   {
     id: '2',
+    slug: 'lost-mc-charity-suspicion',
     title: "Благотворительность 'Lost MC' вызывает подозрения",
     excerpt: "Печально известный мотоклуб утверждает, что собирает плюшевых мишек для сирот, но полиция нашла ящики с запрещенкой.",
     content: `
@@ -61,12 +63,13 @@ export const ARTICLES: Article[] = [
     `,
     author: "Патриция Мадрасо",
     date: "23 окт. 2023",
-    category: Category.CRIME,
+    category: "Криминал",
     imageUrl: "https://picsum.photos/seed/biker/600/400",
     breaking: false
   },
   {
     id: '3',
+    slug: 'alamo-sea-water-level-drops',
     title: "Уровень воды в Аламо-Си падает, обнажая больше машин",
     excerpt: "Засуха раскрывает мутную историю страхового мошенничества в округе Блейн.",
     content: `
@@ -76,12 +79,13 @@ export const ARTICLES: Article[] = [
     `,
     author: "Тревор Ф.",
     date: "22 окт. 2023",
-    category: Category.LIFESTYLE,
+    category: "Стиль жизни",
     imageUrl: "https://picsum.photos/seed/lake/600/400",
     breaking: false
   },
   {
     id: '4',
+    slug: 'opinion-highway-68-speed-limit',
     title: "Мнение: Почему ограничение скорости на Трассе 68 — это тирания",
     excerpt: "Наш редактор считает, что 55 миль в час — это рекомендация, а не закон.",
     content: `
@@ -90,12 +94,13 @@ export const ARTICLES: Article[] = [
     `,
     author: "Джок Крэнли",
     date: "21 окт. 2023",
-    category: Category.OPINION,
+    category: "Мнение",
     imageUrl: "https://picsum.photos/seed/road/600/400",
     breaking: false
   },
   {
     id: '5',
+    slug: 'meth-prices-stabilize',
     title: "Цены на мет стабилизировались после взрыва лаборатории",
     excerpt: "Аналитики рынка предполагают, что недавний «несчастный случай» на ранчо О'Нилов скорректировал переизбыток предложения.",
     content: `
@@ -104,7 +109,7 @@ export const ARTICLES: Article[] = [
     `,
     author: "Шеф",
     date: "20 окт. 2023",
-    category: Category.BUSINESS,
+    category: "Бизнес и Мет",
     imageUrl: "https://picsum.photos/seed/fire/600/400",
     breaking: false
   }

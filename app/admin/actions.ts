@@ -57,6 +57,9 @@ export async function createArticle(formData: FormData) {
         const category = formData.get("category") as string;
         const image = formData.get("image") as string;
         const authorDisplay = formData.get("authorDisplay") as string || "Редакция";
+        const status = formData.get("status") as string || "DRAFT";
+        const publishFrom = formData.get("publishFrom") as string;
+        const publishTo = formData.get("publishTo") as string;
 
         if (!title || !excerpt || !content || !category) {
             return { success: false, message: "Заполните все обязательные поля" };
@@ -73,6 +76,9 @@ export async function createArticle(formData: FormData) {
                 category,
                 image: image || null,
                 authorDisplay,
+                status,
+                publishFrom: publishFrom ? new Date(publishFrom) : null,
+                publishTo: publishTo ? new Date(publishTo) : null,
                 authorId: session.user?.id as string,
             },
         });
@@ -99,13 +105,26 @@ export async function createAd(formData: FormData) {
         const tagline = formData.get("tagline") as string;
         const imageUrl = formData.get("imageUrl") as string;
         const phone = formData.get("phone") as string;
+        const bw = formData.get("bw") === "on";
+        const status = formData.get("status") as string || "DRAFT";
+        const publishFrom = formData.get("publishFrom") as string;
+        const publishTo = formData.get("publishTo") as string;
 
         if (!company || !tagline || !imageUrl || !phone) {
             return { success: false, message: "Заполните все поля" };
         }
 
         await prisma.ad.create({
-            data: { company, tagline, imageUrl, phone },
+            data: {
+                company,
+                tagline,
+                imageUrl,
+                phone,
+                bw,
+                status,
+                publishFrom: publishFrom ? new Date(publishFrom) : null,
+                publishTo: publishTo ? new Date(publishTo) : null,
+            },
         });
 
         revalidatePath("/admin/ads");
@@ -128,6 +147,10 @@ export async function updateAd(id: string, formData: FormData) {
         const tagline = formData.get("tagline") as string;
         const imageUrl = formData.get("imageUrl") as string;
         const phone = formData.get("phone") as string;
+        const bw = formData.get("bw") === "on";
+        const status = formData.get("status") as string || "DRAFT";
+        const publishFrom = formData.get("publishFrom") as string;
+        const publishTo = formData.get("publishTo") as string;
 
         if (!company || !tagline || !imageUrl || !phone) {
             return { success: false, message: "Заполните все поля" };
@@ -135,7 +158,16 @@ export async function updateAd(id: string, formData: FormData) {
 
         await prisma.ad.update({
             where: { id },
-            data: { company, tagline, imageUrl, phone },
+            data: {
+                company,
+                tagline,
+                imageUrl,
+                phone,
+                bw,
+                status,
+                publishFrom: publishFrom ? new Date(publishFrom) : null,
+                publishTo: publishTo ? new Date(publishTo) : null,
+            },
         });
 
         revalidatePath("/admin/ads");
@@ -188,6 +220,9 @@ export async function updateArticle(id: string, formData: FormData) {
         const category = formData.get("category") as string;
         const image = formData.get("image") as string;
         const authorDisplay = formData.get("authorDisplay") as string || "Редакция";
+        const status = formData.get("status") as string || "DRAFT";
+        const publishFrom = formData.get("publishFrom") as string;
+        const publishTo = formData.get("publishTo") as string;
 
         if (!title || !excerpt || !content || !category) {
             return { success: false, message: "Заполните все обязательные поля" };
@@ -202,6 +237,9 @@ export async function updateArticle(id: string, formData: FormData) {
                 category,
                 image: image || null,
                 authorDisplay,
+                status,
+                publishFrom: publishFrom ? new Date(publishFrom) : null,
+                publishTo: publishTo ? new Date(publishTo) : null,
             },
         });
 

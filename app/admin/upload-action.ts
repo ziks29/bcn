@@ -6,8 +6,13 @@ import { auth } from "@/lib/auth";
 
 export async function uploadImage(formData: FormData): Promise<{ success: boolean; url?: string; error?: string }> {
     const session = await auth();
-    if (!session || (session.user as any).role !== "ADMIN") {
+    if (!session || !session.user) {
         return { success: false, error: "Unauthorized" };
+    }
+
+    const role = (session.user as any).role;
+    if (!["ADMIN", "CHIEF_EDITOR", "EDITOR", "AUTHOR"].includes(role)) {
+        return { success: false, error: "Unauthorized role" };
     }
 
     const file = formData.get("file") as File | null;

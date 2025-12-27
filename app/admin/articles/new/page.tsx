@@ -6,21 +6,14 @@ import ArticleEditorInput from "@/components/ArticleEditorInput";
 import ImageUpload from "@/components/ImageUpload";
 import { ArticleForm } from "../ArticleForm";
 
-// Enum values for selection
-const CATEGORIES = [
-    "Местные новости",
-    "Криминал",
-    "Политика",
-    "Мнение",
-    "Бизнес и Мет",
-    "Стиль жизни"
-];
-
 export default async function NewArticlePage() {
     const session = await auth();
     if (!session) redirect("/login");
 
     const { prisma } = await import("@/lib/prisma");
+    const categories = await prisma.category.findMany({
+        orderBy: { createdAt: 'asc' }
+    });
     const user = await prisma.user.findUnique({ where: { id: session.user?.id } });
 
     return (
@@ -42,12 +35,40 @@ export default async function NewArticlePage() {
                             <div>
                                 <label className="block text-xs font-bold uppercase tracking-widest mb-1">Категория</label>
                                 <select name="category" className="w-full border-2 border-black p-2 bg-white" required>
-                                    {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                                    {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
                                 </select>
                             </div>
                             <div>
                                 <label className="block text-xs font-bold uppercase tracking-widest mb-1">Автор (отображаемый)</label>
                                 <input name="authorDisplay" defaultValue={user?.displayName || "Редакция"} className="w-full border-2 border-black p-2" />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold uppercase tracking-widest mb-1">Статус публикации</label>
+                            <select name="status" className="w-full border-2 border-black p-2 bg-white" defaultValue="DRAFT">
+                                <option value="DRAFT">Черновик</option>
+                                <option value="PENDING">На рассмотрении</option>
+                                <option value="PUBLISHED">Опубликовано</option>
+                            </select>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-xs font-bold uppercase tracking-widest mb-1">Опубликовать с (необязательно)</label>
+                                <input
+                                    type="datetime-local"
+                                    name="publishFrom"
+                                    className="w-full border-2 border-black p-2"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold uppercase tracking-widest mb-1">Опубликовать до (необязательно)</label>
+                                <input
+                                    type="datetime-local"
+                                    name="publishTo"
+                                    className="w-full border-2 border-black p-2"
+                                />
                             </div>
                         </div>
 
