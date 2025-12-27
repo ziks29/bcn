@@ -54,7 +54,7 @@ RUN if [ -f pnpm-lock.yaml ]; then \
 
 # Stage 3: Runner
 FROM node:20-alpine AS runner
-RUN apk add --no-cache libc6-compat openssl
+RUN apk add --no-cache libc6-compat openssl su-exec
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -73,16 +73,15 @@ COPY --from=builder /app/entrypoint.sh ./entrypoint.sh
 # Install Prisma CLI globally so it's available in the runner
 RUN npm install -g prisma@5.22.0
 
-# Allow nextjs user to write to global node_modules/prisma (for engine downloads)
-RUN chown -R nextjs:nodejs /usr/local/lib/node_modules/prisma
+# Ensure prisma directory exists
+RUN mkdir -p /app/prisma
 
-# Ensure prisma directory exists and is owned by nextjs
-RUN mkdir -p /app/prisma && chown -R nextjs:nodejs /app/prisma
-
-# Ensure entrypoint is executable in runner
+# Ensure entrypoint is executable
 USER root
-RUN chmod +x entrypoint.sh && chown nextjs:nodejs entrypoint.sh
-USER nextjs
+RUN chmod +x entrypoint.sh
+
+# Do NOT switch to nextjs user here, we will use su-exec in entrypoint.sh 
+# to fix volume permissions at runtime and then drop privileges.
 
 EXPOSE 3000
 
