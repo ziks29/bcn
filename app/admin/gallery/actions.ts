@@ -49,7 +49,11 @@ export async function uploadGalleryImage(formData: FormData) {
 }
 
 export async function addExternalImage(url: string) {
+    console.log("addExternalImage: Received URL:", url);
+
     const session = await auth();
+    console.log("addExternalImage: Session found:", !!session);
+
     if (!session) {
         return { success: false, error: "Unauthorized" };
     }

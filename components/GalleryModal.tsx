@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { X, Upload, Link as LinkIcon, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { getGalleryItems, uploadGalleryImage, addExternalImage } from "@/app/admin/gallery/actions";
@@ -26,6 +26,7 @@ export default function GalleryModal({ isOpen, onClose, onSelect }: GalleryModal
     const [isUploading, setIsUploading] = useState(false);
     const [isAddingUrl, setIsAddingUrl] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
+    const urlInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (isOpen) {
@@ -91,12 +92,15 @@ export default function GalleryModal({ isOpen, onClose, onSelect }: GalleryModal
         }
     }, []);
 
-    const handleExternalUrl = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        const formData = new FormData(e.currentTarget);
-        const url = formData.get("url") as string;
+    const handleExternalUrl = async () => {
+        const url = urlInputRef.current?.value || "";
 
-        if (!url) return;
+        console.log("GalleryModal: Attempting to add external URL:", url);
+
+        if (!url) {
+            console.warn("GalleryModal: URL is empty, skipping submission");
+            return;
+        }
 
         setIsAddingUrl(true);
         try {
@@ -104,7 +108,7 @@ export default function GalleryModal({ isOpen, onClose, onSelect }: GalleryModal
             if (result.success) {
                 toast.success("Ссылка добавлена");
                 loadItems();
-                (e.target as HTMLFormElement).reset();
+                if (urlInputRef.current) urlInputRef.current.value = "";
             } else {
                 toast.error(result.error || "Ошибка добавления");
             }
@@ -112,6 +116,14 @@ export default function GalleryModal({ isOpen, onClose, onSelect }: GalleryModal
             toast.error("Ошибка добавления");
         } finally {
             setIsAddingUrl(false);
+        }
+    };
+
+    const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            e.stopPropagation();
+            handleExternalUrl();
         }
     };
 
@@ -146,22 +158,24 @@ export default function GalleryModal({ isOpen, onClose, onSelect }: GalleryModal
                         </span>
                     </div>
 
-                    <form onSubmit={handleExternalUrl} className="flex gap-2 flex-1">
+                    <div className="flex gap-2 flex-1">
                         <input
-                            name="url"
+                            ref={urlInputRef}
                             type="url"
                             placeholder="Внешняя ссылка..."
                             className="flex-1 border-2 border-zinc-200 p-2 font-mono text-sm focus:border-black focus:outline-none"
                             disabled={isAddingUrl}
+                            onKeyDown={handleInputKeyDown}
                         />
                         <button
-                            type="submit"
+                            type="button"
+                            onClick={handleExternalUrl}
                             disabled={isAddingUrl}
                             className="bg-zinc-200 hover:bg-zinc-300 px-3 py-2 font-bold uppercase disabled:opacity-50"
                         >
                             {isAddingUrl ? <Loader2 className="animate-spin" size={16} /> : <LinkIcon size={16} />}
                         </button>
-                    </form>
+                    </div>
                 </div>
 
                 {/* Grid */}
