@@ -19,6 +19,7 @@ services:
       - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:9999}
       - ADMIN_SECRET=${ADMIN_SECRET:-change-this-to-secure-secret}
       - API_KEY=${API_KEY:-change-this-to-secure-secret}
+      - AUTH_TRUST_HOST=true
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     volumes:

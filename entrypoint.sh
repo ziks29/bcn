@@ -7,8 +7,9 @@ echo "Starting BCN App Entrypoint..."
 
 # Fix permissions on the volumes if we are running as root
 if [ "$(id -u)" = '0' ]; then
-  echo "Fixing permissions on /app/prisma..."
+  echo "Fixing permissions on /app/prisma and /app/.next..."
   chown -R nextjs:nodejs /app/prisma
+  chown -R nextjs:nodejs /app/.next
   
   # Also ensure the entrypoint is run as nextjs
   echo "Dropping privileges to nextjs..."
