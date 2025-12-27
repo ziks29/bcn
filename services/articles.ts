@@ -22,7 +22,11 @@ export async function getArticles() {
             include: { author: true },
             orderBy: { createdAt: 'desc' }
         });
-        return articles.map(mapPrismaArticle);
+
+        return articles.map((item, index) => ({
+            ...mapPrismaArticle(item),
+            breaking: index === 0 // Mark the first article as breaking
+        }));
     } catch (error) {
         console.error("Failed to fetch articles:", error);
         return [];

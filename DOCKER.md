@@ -49,6 +49,37 @@ or
 docker-compose down
 ```
 
+## Local Development (pnpm dev)
+
+If you want to run the application locally using `pnpm dev` but use a Dockerized PostgreSQL database, follow these steps:
+
+### 1. Start the Database Only
+```bash
+npm run db:up
+```
+This starts only the `bcn_postgres` container.
+
+### 2. Configure .env
+Ensure your `.env` file uses `localhost` for the connection:
+```env
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/bcn_news?schema=public"
+```
+
+### 3. Run Prisma Migrations
+```bash
+npx prisma migrate dev
+```
+
+### 4. Start Development Server
+```bash
+pnpm dev
+```
+
+### 5. Stop the Database
+```bash
+npm run db:down
+```
+
 ## Available Commands
 
 | Command | Description |
