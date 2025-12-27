@@ -1,3 +1,5 @@
+"use server";
+
 import { FiveMServerData } from '../types';
 
 const API_BASE_URL = 'https://servers-frontend.fivem.net/api/servers/single/';
@@ -8,7 +10,7 @@ interface FiveMServerResponse {
 }
 
 /**
- * Fetches server data from the FiveM API.
+ * Fetches server data from the FiveM API on the server side to bypass CORS.
  * @param serverId The unique ID of the FiveM server (e.g., its cfx.re code).
  */
 export const fetchServerData = async (serverId: string): Promise<FiveMServerData | null> => {
