@@ -53,7 +53,7 @@ const NewsDashboard: React.FC<NewsDashboardProps> = ({ initialArticles, initialA
     const otherNews = filteredArticles.filter(a => a.id !== breakingNews?.id);
 
     return (
-        <div className="min-h-screen flex flex-col font-serif-body bg-[#f4f1ea] selection:bg-red-200 selection:text-red-900">
+        <div className="min-h-screen flex flex-col font-serif-body bg-[#faf8f3] selection:bg-amber-200 selection:text-[#4b3634]">
             <Header onCategorySelect={handleCategorySelect} />
 
             <main className="flex-grow container mx-auto px-4 py-8">
@@ -68,11 +68,11 @@ const NewsDashboard: React.FC<NewsDashboardProps> = ({ initialArticles, initialA
                             <div className="animate-fade-in">
 
                                 {/* Section Header */}
-                                <div className="flex items-baseline justify-between border-b-2 border-black mb-6 pb-2">
-                                    <h2 className="font-headline text-3xl font-bold uppercase tracking-tight">
+                                <div className="flex items-baseline justify-between border-b-2 border-black mb-6 pb-2 px-2 md:px-0">
+                                    <h2 className="font-headline text-2xl md:text-3xl font-bold uppercase tracking-tight">
                                         {selectedCategory ? selectedCategory : 'Заголовки'}
                                     </h2>
-                                    {!selectedCategory && <span className="text-red-700 text-xs font-bold uppercase tracking-widest animate-pulse">Свежие обновления</span>}
+                                    {!selectedCategory && <span className="text-[#4b3634] text-[10px] md:text-xs font-bold uppercase tracking-widest animate-pulse">Свежие обновления</span>}
                                 </div>
 
                                 {/* Breaking News Hero (Only on Home) */}
@@ -84,11 +84,11 @@ const NewsDashboard: React.FC<NewsDashboardProps> = ({ initialArticles, initialA
                                                 alt={breakingNews.title}
                                                 className="w-full h-[400px] object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700"
                                             />
-                                            <div className="absolute bottom-0 left-0 bg-red-700 text-white px-3 py-1 text-xs font-bold uppercase tracking-widest">
+                                            <div className="absolute bottom-0 left-0 bg-[#4b3634] text-white px-3 py-1 text-xs font-bold uppercase tracking-widest">
                                                 Главная тема
                                             </div>
                                         </div>
-                                        <h2 className="text-4xl md:text-5xl font-newspaper font-bold text-zinc-900 leading-none mb-3 group-hover:text-red-900 transition-colors">
+                                        <h2 className="text-4xl md:text-5xl font-newspaper font-bold text-zinc-900 leading-none mb-3 group-hover:text-[#4b3634] transition-colors">
                                             {breakingNews.title}
                                         </h2>
                                         <p className="text-lg text-zinc-600 font-serif-body italic mb-2 border-l-4 border-zinc-300 pl-4">
@@ -113,13 +113,13 @@ const NewsDashboard: React.FC<NewsDashboardProps> = ({ initialArticles, initialA
                                             <div className="flex items-center space-x-2 mb-2">
                                                 <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 border border-zinc-300 px-1">{article.category}</span>
                                             </div>
-                                            <h3 className="text-2xl font-newspaper font-bold leading-tight mb-2 group-hover:underline decoration-red-700 decoration-2 underline-offset-2">
+                                            <h3 className="text-2xl font-newspaper font-bold leading-tight mb-2 group-hover:underline decoration-[#4b3634] decoration-2 underline-offset-2">
                                                 {article.title}
                                             </h3>
                                             <p className="text-sm text-zinc-600 line-clamp-3 mb-3 flex-grow">
                                                 {article.excerpt}
                                             </p>
-                                            <div className="mt-auto flex items-center text-red-800 text-xs font-bold uppercase tracking-widest group-hover:translate-x-1 transition-transform">
+                                            <div className="mt-auto flex items-center text-[#4b3634] text-xs font-bold uppercase tracking-widest group-hover:translate-x-1 transition-transform">
                                                 Читать полностью <ChevronRight size={14} />
                                             </div>
                                         </div>

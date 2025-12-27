@@ -1,5 +1,5 @@
-import React from 'react';
-import { Menu, Search, Sun, CloudRain } from 'lucide-react';
+import React, { useState } from 'react';
+import { Menu, Search, Sun, CloudRain, X } from 'lucide-react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { Category } from '../types';
@@ -10,32 +10,35 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
   const { data: session } = useSession();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   // Use Russian locale for date
   const currentDate = new Date().toLocaleDateString('ru-RU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
+  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+
+  const handleMobileNavClick = (category: Category | 'HOME') => {
+    onCategorySelect(category);
+    setIsMenuOpen(false);
+  };
+
   return (
     <>
-      <header className="bg-[#f4f1ea]">
+      <header className="bg-[#faf8f3]">
         {/* Top Bar */}
-        <div className="bg-zinc-800 text-[#f4f1ea] text-xs py-1 px-4 flex justify-between items-center font-sans">
-          <div className="flex space-x-4">
-            <span>ВЫПУСК CXXIV... № 42,910</span>
-            <span className="hidden md:inline">Единственный надежный источник новостей округа Блейн</span>
+        <div className="text-xs font-sans grid grid-cols-1 md:grid-cols-[1fr_2fr_1fr] items-center border-b border-zinc-200 md:border-none">
+          <div className="bg-[#4b3634] text-[#faf8f3] p-2 pl-4 text-center md:text-left">
+            <span className="font-bold uppercase tracking-wider">{currentDate}</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <span className="capitalize">{currentDate}</span>
-            <span className="mx-2">|</span>
-            <div className="flex items-center">
-              <Sun size={14} className="mr-1 text-yellow-500" />
-              <span>40°C (Сухо)</span>
-            </div>
-            <span className="mx-2">|</span>
+          <p className="hidden md:block text-center font-bold uppercase tracking-wider text-lg font-headline">
+            СДЕЛАЕМ НОВОСТИ ВЕЛИКИМИ СНОВА
+          </p>
+          <div className="p-2 bg-[#4b3634] text-[#faf8f3] pr-4 h-full flex justify-center md:justify-end items-center">
             {session ? (
-              <Link href="/admin" className="hover:text-red-400 hover:underline transition-colors uppercase font-bold text-[10px] tracking-wider text-green-400">
+              <Link href="/admin" className="hover:text-amber-700 hover:underline transition-colors uppercase font-bold tracking-wider">
                 Редакторская
               </Link>
             ) : (
-              <Link href="/login" className="hover:text-red-400 hover:underline transition-colors uppercase font-bold text-[10px] tracking-wider">
+              <Link href="/login" className="hover:text-amber-700 hover:underline transition-colors uppercase font-bold tracking-wider">
                 Вход для журналистов
               </Link>
             )}
@@ -43,8 +46,8 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
         </div>
 
         {/* Main Logo Area */}
-        <div className="py-6 flex flex-col items-center justify-center relative">
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 md:block hidden">
+        <div className="py-4 md:py-6 flex flex-col items-center justify-center relative px-4 text-center">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 lg:block hidden">
             <div className="text-center border-2 border-zinc-800 p-2 transform -rotate-2">
               <p className="text-xs font-bold uppercase tracking-widest">Осн. 1924</p>
               <p className="text-[10px] italic">"Правда не обязательна"</p>
@@ -52,10 +55,25 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
           </div>
 
           <h1
-            className="text-4xl md:text-6xl lg:text-8xl font-brand text-zinc-900 cursor-pointer hover:scale-[1.01] transition-transform duration-300 text-center"
+            className="text-5xl md:text-6xl lg:text-8xl font-brand text-white cursor-pointer hover:scale-[1.01] transition-transform duration-300 text-center uppercase tracking-widest italic"
             onClick={() => onCategorySelect('HOME')}
+            style={{
+              textShadow: `
+                -1px 1px 0px #000,
+                -2px 2px 0px #000,
+                -3px 3px 0px #000,
+                -4px 4px 0px #000,
+                -5px 5px 0px #000,
+                -6px 6px 0px #000,
+                -7px 7px 0px #000,
+                -8px 8px 0px #000
+              `,
+              WebkitTextStroke: '2px #000',
+              paintOrder: 'stroke fill',
+              letterSpacing: '0.03em',
+            }}
           >
-            Blaine County News
+            Blaine Gazette
           </h1>
 
           <div className="absolute right-4 top-1/2 -translate-y-1/2 md:block hidden">
@@ -67,17 +85,21 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
       </header>
 
       {/* Navigation - Sticky */}
-      <nav className="sticky top-0 z-50 bg-[#f4f1ea] border-t-2 border-b-4 border-double border-zinc-800 py-2 shadow-sm">
+      <nav className="sticky top-0 z-50 bg-[#4b3634] text-white py-2 shadow-sm border-y border-black">
         <div className="container mx-auto px-4">
-          {/* Mobile Menu Icon */}
-          <div className="md:hidden flex justify-center">
-            <Menu className="cursor-pointer" />
+          {/* Mobile Menu Toggle */}
+          <div className="md:hidden flex justify-between items-center">
+            <button onClick={toggleMenu} className="p-1 focus:outline-none" aria-label="Toggle menu">
+              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+            <span className="font-headline font-bold uppercase tracking-widest text-sm">Навигация</span>
+            <Search size={20} className="text-zinc-300" />
           </div>
 
           {/* Desktop Nav */}
           <ul className="hidden md:flex justify-center space-x-8 font-serif-body font-bold text-sm tracking-widest uppercase">
             <li
-              className="cursor-pointer hover:text-red-700 hover:underline decoration-2 underline-offset-4"
+              className="cursor-pointer hover:text-amber-700 hover:underline decoration-2 underline-offset-4"
               onClick={() => onCategorySelect('HOME')}
             >
               Главная
@@ -85,7 +107,7 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
             {Object.values(Category).map((cat) => (
               <li
                 key={cat}
-                className="cursor-pointer hover:text-red-700 hover:underline decoration-2 underline-offset-4"
+                className="cursor-pointer hover:text-amber-700 hover:underline decoration-2 underline-offset-4"
                 onClick={() => onCategorySelect(cat)}
               >
                 {cat}
@@ -93,6 +115,33 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect }) => {
             ))}
           </ul>
         </div>
+
+        {/* Mobile Nav Drawer */}
+        {isMenuOpen && (
+          <div className="md:hidden bg-[#faf8f3] text-zinc-900 absolute top-full left-0 w-full border-b-4 border-[#4b3634] animate-fade-in shadow-2xl">
+            <ul className="flex flex-col p-4 space-y-2 font-serif-body font-bold text-lg tracking-widest uppercase">
+              <li
+                className="cursor-pointer hover:bg-zinc-200 p-3 border-b border-zinc-200"
+                onClick={() => handleMobileNavClick('HOME')}
+              >
+                Главная
+              </li>
+              {Object.values(Category).map((cat) => (
+                <li
+                  key={cat}
+                  className="cursor-pointer hover:bg-zinc-200 p-3 border-b border-zinc-200"
+                  onClick={() => handleMobileNavClick(cat)}
+                >
+                  {cat}
+                </li>
+              ))}
+              <li className="pt-4 flex justify-between items-center text-[10px] text-zinc-400 font-sans tracking-normal uppercase">
+                <span>&copy; Blaine Gazette 2025</span>
+                <Link href="/login" className="text-amber-700 font-bold" onClick={() => setIsMenuOpen(false)}>Личный кабинет</Link>
+              </li>
+            </ul>
+          </div>
+        )}
       </nav>
     </>
   );

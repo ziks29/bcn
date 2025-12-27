@@ -1,3 +1,5 @@
+"use server";
+
 import { GoogleGenAI } from "@google/genai";
 
 // Initialize the Gemini API client
@@ -11,7 +13,7 @@ export const generateRedneckWisdom = async (): Promise<string> => {
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-2.5-flash',
       contents: "Напиши короткий, смешной, сатирический 'гороскоп' или 'мудрость реднека' из 2 предложений для жителя округа Блейн (вселенная GTA V). Говори про грузовики, пришельцев, правительственные заговоры или выпивку. На русском языке.",
     });
 

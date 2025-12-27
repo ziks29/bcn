@@ -35,3 +35,15 @@ export interface Stock {
   price: number;
   change: number; // Percentage
 }
+
+export interface FiveMServerData {
+  clients: number;
+  sv_maxclients: number;
+  hostname: string;
+  connectEndPoints: string[];
+  vars: {
+    banner_detail: string;
+    sv_projectName: string;
+    sv_projectDesc: string;
+  };
+}

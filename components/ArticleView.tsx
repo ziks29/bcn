@@ -12,15 +12,15 @@ const ArticleView: React.FC<ArticleViewProps> = ({ article, onBack }) => {
     <article className="animate-fade-in">
       <button
         onClick={onBack}
-        className="flex items-center text-red-700 font-bold uppercase text-xs tracking-widest mb-6 hover:underline"
+        className="flex items-center text-[#4b3634] font-bold uppercase text-xs tracking-widest mb-6 hover:underline"
       >
         <ArrowLeft size={14} className="mr-1" /> Назад к заголовкам
       </button>
 
       <header className="mb-8 border-b-2 border-zinc-200 pb-8">
         <div className="flex items-center space-x-2 mb-4">
-          <span className="bg-red-700 text-white text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider">{article.category}</span>
-          {article.breaking && <span className="text-red-600 font-bold text-xs uppercase animate-pulse">Срочные новости</span>}
+          <span className="bg-[#4b3634] text-white text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider">{article.category}</span>
+          {article.breaking && <span className="text-amber-700 font-bold text-xs uppercase animate-pulse">Срочные новости</span>}
         </div>
 
         <h1 className="text-4xl md:text-6xl font-newspaper leading-tight text-zinc-900 mb-6">

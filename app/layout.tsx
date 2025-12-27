@@ -17,28 +17,40 @@ export default function RootLayout({
     <html lang="ru">
       <head>
         <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
-        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=PT+Serif:ital,wght@0,400;0,700;1,400&family=UnifrakturMaguntia&family=Oswald:wght@300;400;600&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400&family=Oswald:wght@400;600;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet" />
         <style dangerouslySetInnerHTML={{
           __html: `
-          /* Old English font for the brand name only */
+          /* Custom Fonts */
+          @font-face {
+            font-family: 'Fatal';
+            src: url('/fonts/fatal.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+          }
+          
+          /* Font Classes */
           .font-brand {
-            font-family: 'UnifrakturMaguntia', cursive;
+            font-family: 'Fatal', cursive, serif;
           }
-          /* Classic serif for Russian headlines */
+          
           .font-newspaper {
-            font-family: 'Playfair Display', serif;
+            font-family: 'Playfair Display', Georgia, serif;
+            font-weight: 700;
           }
-          /* Readable serif for body text */
+          
           .font-serif-body {
-            font-family: 'PT Serif', serif;
+            font-family: 'PT Serif', Georgia, serif;
           }
-          /* Condensed sans for tags and UI elements */
+          
           .font-headline {
-            font-family: 'Oswald', sans-serif;
+            font-family: 'Oswald', 'Arial Narrow', sans-serif;
+            font-weight: 600;
+            text-transform: uppercase;
           }
         `}} />
       </head>
-      <body className="bg-[#f4f1ea] text-zinc-900">
+      <body className="bg-[#faf8f3] text-zinc-900">
         <Providers>
           <div id="root">{children}</div>
           <Toaster
