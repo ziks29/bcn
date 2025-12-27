@@ -14,7 +14,7 @@ services:
       - "9999:3000"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=file:./prisma/prod.db
+      - DATABASE_URL=file:/app/prisma/prod.db
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-super-secret-development-key-change-in-prod}
       - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:9999}
       - ADMIN_SECRET=${ADMIN_SECRET:-change-this-to-secure-secret}

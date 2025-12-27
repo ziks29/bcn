@@ -76,9 +76,12 @@ RUN npm install -g prisma@5.22.0
 # Allow nextjs user to write to global node_modules/prisma (for engine downloads)
 RUN chown -R nextjs:nodejs /usr/local/lib/node_modules/prisma
 
+# Ensure prisma directory exists and is owned by nextjs
+RUN mkdir -p /app/prisma && chown -R nextjs:nodejs /app/prisma
+
 # Ensure entrypoint is executable in runner
 USER root
-RUN chmod +x entrypoint.sh
+RUN chmod +x entrypoint.sh && chown nextjs:nodejs entrypoint.sh
 USER nextjs
 
 EXPOSE 3000
