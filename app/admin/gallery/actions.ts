@@ -3,7 +3,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import sharp from "sharp";
+
 
 // Helper function to upload images to ImgBB
 async function uploadToImgBB(buffer: Buffer, filename: string): Promise<{
