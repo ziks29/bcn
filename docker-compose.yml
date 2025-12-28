@@ -20,6 +20,9 @@ services:
       - ADMIN_SECRET=${ADMIN_SECRET:-change-this-to-secure-secret}
       - API_KEY=${API_KEY:-change-this-to-secure-secret}
       - AUTH_TRUST_HOST=true
+    volumes:
+      # Persist uploads between container updates
+      - uploads_data:/app/public/uploads
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     networks:
@@ -28,3 +31,7 @@ services:
 networks:
   bcn_network:
     driver: bridge
+
+volumes:
+  uploads_data:
+    driver: local

@@ -83,6 +83,10 @@ RUN npm install -g prisma@5.22.0
 # Ensure entrypoint is executable
 RUN chmod +x entrypoint.sh
 
+# Create uploads directory and set proper permissions
+RUN mkdir -p ./public/uploads && \
+    chown -R nextjs:nodejs ./public
+
 # Switch to non-root user
 USER nextjs
 
