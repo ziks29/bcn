@@ -3,9 +3,58 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { writeFile, mkdir, chmod } from "fs/promises";
-import path from "path";
-import { v4 as uuidv4 } from 'uuid';
+import sharp from "sharp";
+
+// Helper function to upload images to ImgBB
+async function uploadToImgBB(buffer: Buffer, filename: string): Promise<{
+    success: boolean;
+    url?: string;
+    error?: string;
+}> {
+    const apiKey = process.env.IMGBB_API_KEY;
+
+    if (!apiKey) {
+        console.error("ImgBB API key not configured");
+        return { success: false, error: "ImgBB API key not configured. Please add IMGBB_API_KEY to your environment variables." };
+    }
+
+    try {
+        console.log("Uploading to ImgBB, file size:", buffer.length, "bytes");
+
+        const base64Image = buffer.toString('base64');
+
+        const formData = new FormData();
+        formData.append('key', apiKey);
+        formData.append('image', base64Image);
+        formData.append('name', filename);
+
+        const response = await fetch('https://api.imgbb.com/1/upload', {
+            method: 'POST',
+            body: formData,
+        });
+
+        const data = await response.json();
+        console.log("ImgBB response:", data.success ? "Success" : "Failed", data.error?.message || "");
+
+        if (data.success && data.data) {
+            console.log("Image uploaded successfully:", data.data.display_url);
+            return {
+                success: true,
+                url: data.data.display_url,
+            };
+        } else {
+            const errorMsg = data.error?.message || 'Upload failed';
+            console.error("ImgBB upload failed:", errorMsg);
+            return { success: false, error: errorMsg };
+        }
+    } catch (error) {
+        console.error('ImgBB upload error:', error);
+        return {
+            success: false,
+            error: `Failed to upload to ImgBB: ${error instanceof Error ? error.message : 'Unknown error'}`
+        };
+    }
+}
 
 export async function uploadGalleryImage(formData: FormData) {
     const session = await auth();
@@ -23,34 +72,27 @@ export async function uploadGalleryImage(formData: FormData) {
         return { success: false, error: "No file provided" };
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const filename = `${uuidv4()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "")}`;
-    const uploadDir = path.join(process.cwd(), "public", "uploads");
-
     try {
-        await mkdir(uploadDir, { recursive: true });
-        const filePath = path.join(uploadDir, filename);
-        await writeFile(filePath, buffer);
+        const buffer = Buffer.from(await file.arrayBuffer());
 
-        // Ensure file has correct permissions (readable by all)
-        try {
-            await chmod(filePath, 0o644);
-        } catch (chmodError) {
-            console.warn("Could not set file permissions:", chmodError);
+        // Upload to ImgBB
+        const result = await uploadToImgBB(buffer, file.name);
+
+        if (!result.success) {
+            return { success: false, error: result.error };
         }
 
-        const url = `/uploads/${filename}`;
-
+        // Save to database
         await prisma.galleryItem.create({
             data: {
-                url,
+                url: result.url!,
                 name: file.name,
                 type: "UPLOAD",
             },
         });
 
         revalidatePath("/admin/gallery");
-        return { success: true, url };
+        return { success: true, url: result.url };
     } catch (error) {
         console.error("Upload error:", error);
         return { success: false, error: "Failed to upload file" };
@@ -72,12 +114,12 @@ export async function addExternalImage(url: string) {
     }
 
     try {
-        // Check if URL is from Discord
+        // Check if URL is from Discord or other CDN that might expire
         const isDiscordUrl = url.includes("discord.com") || url.includes("discordapp.net") || url.includes("cdn.discordapp.com");
 
         if (isDiscordUrl) {
-            // Download Discord images to prevent expiration
-            console.log("Discord URL detected, fetching image...");
+            // Download Discord images and re-upload to ImgBB for permanence
+            console.log("Discord URL detected, downloading and re-uploading to ImgBB...");
 
             try {
                 const response = await fetch(url, {
@@ -120,38 +162,27 @@ export async function addExternalImage(url: string) {
                     return { success: false, error: "Downloaded image is empty" };
                 }
 
-                // Create unique filename
-                const filename = `${uuidv4()}.${extension}`;
-                const uploadDir = path.join(process.cwd(), "public", "uploads");
-                const filePath = path.join(uploadDir, filename);
-                console.log("Saving to:", filePath);
+                // Upload to ImgBB
+                const filename = `discord-image.${extension}`;
+                const result = await uploadToImgBB(buffer, filename);
 
-                // Save the file
-                await mkdir(uploadDir, { recursive: true });
-                await writeFile(filePath, buffer);
-
-                // Ensure file has correct permissions (readable by all)
-                try {
-                    await chmod(filePath, 0o644);
-                    console.log("Set file permissions to 0o644");
-                } catch (chmodError) {
-                    console.warn("Could not set file permissions:", chmodError);
+                if (!result.success) {
+                    return { success: false, error: result.error };
                 }
 
-                const localUrl = `/uploads/${filename}`;
-                console.log("Successfully saved Discord image as:", localUrl);
+                console.log("Successfully uploaded Discord image to ImgBB:", result.url);
 
-                // Create gallery item with local URL
+                // Create gallery item with ImgBB URL
                 await prisma.galleryItem.create({
                     data: {
-                        url: localUrl,
-                        name: "Discord Image (downloaded)",
+                        url: result.url!,
+                        name: "Discord Image (via ImgBB)",
                         type: "EXTERNAL",
                     },
                 });
 
                 revalidatePath("/admin/gallery");
-                return { success: true, url: localUrl };
+                return { success: true, url: result.url };
             } catch (fetchError) {
                 console.error("Discord fetch error:", fetchError);
                 return { success: false, error: `Network error downloading Discord image: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}` };
@@ -182,17 +213,6 @@ export async function deleteGalleryItem(id: string) {
     }
 
     try {
-        // Optimistically delete from DB. 
-        // For local files, we could also delete the file, but let's keep it simple for now as per plan
-        // (or if we want to be thorough, we fetch first)
-
-        /* 
-        const item = await prisma.galleryItem.findUnique({ where: { id } });
-        if (item?.type === "UPLOAD") {
-            // attempt to delete file
-        }
-        */
-
         await prisma.galleryItem.delete({
             where: { id },
         });

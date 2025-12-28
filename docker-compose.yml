@@ -19,10 +19,8 @@ services:
       - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:9999}
       - ADMIN_SECRET=${ADMIN_SECRET:-change-this-to-secure-secret}
       - API_KEY=${API_KEY:-change-this-to-secure-secret}
+      - IMGBB_API_KEY=${IMGBB_API_KEY}
       - AUTH_TRUST_HOST=true
-    volumes:
-      # Persist uploads between container updates
-      - uploads_data:/app/public/uploads
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     networks:
@@ -31,7 +29,3 @@ services:
 networks:
   bcn_network:
     driver: bridge
-
-volumes:
-  uploads_data:
-    driver: local
