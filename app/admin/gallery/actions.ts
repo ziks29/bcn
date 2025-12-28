@@ -37,10 +37,10 @@ async function uploadToImgBB(buffer: Buffer, filename: string): Promise<{
         console.log("ImgBB response:", data.success ? "Success" : "Failed", data.error?.message || "");
 
         if (data.success && data.data) {
-            console.log("Image uploaded successfully:", data.data.display_url);
+            console.log("Image uploaded successfully:", data.data.url);
             return {
                 success: true,
-                url: data.data.display_url,
+                url: data.data.url,
             };
         } else {
             const errorMsg = data.error?.message || 'Upload failed';
