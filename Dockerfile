@@ -45,6 +45,12 @@ RUN chmod +x entrypoint.sh
 
 # Build Next.js app
 ENV NEXT_TELEMETRY_DISABLED=1
+# Set dummy build-time environment variables
+# These will be overridden at runtime by the actual .env file
+ENV DATABASE_URL="file:./prisma/dev.db"
+ENV NEXTAUTH_URL="http://localhost:3000"
+ENV NEXTAUTH_SECRET="build-time-secret-will-be-overridden-at-runtime"
+
 RUN if [ -f pnpm-lock.yaml ]; then \
     corepack enable && \
     corepack prepare pnpm@latest --activate && \
