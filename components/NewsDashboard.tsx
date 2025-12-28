@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Header from './Header';
-import Footer from './Footer';
 import Sidebar from './Sidebar';
 import Link from 'next/link';
 import { Article, Category, Ad } from '../types';
@@ -14,20 +13,23 @@ interface NewsDashboardProps {
     categories: string[];
 }
 
+const ARTICLES_PER_PAGE = 12;
+
 const NewsDashboard: React.FC<NewsDashboardProps> = ({ initialArticles, initialAds, categories }) => {
     const [currentView, setCurrentView] = useState<'HOME' | 'CATEGORY'>('HOME');
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [filteredArticles, setFilteredArticles] = useState<Article[]>(initialArticles);
+    const [displayCount, setDisplayCount] = useState(ARTICLES_PER_PAGE);
 
     // Initial load effect
     useEffect(() => {
         window.scrollTo(0, 0);
     }, [currentView]);
 
-    // const handleArticleClick = (article: Article) => {
-    //     setSelectedArticle(article);
-    //     setCurrentView('ARTICLE');
-    // };
+    // Reset display count when changing views or categories
+    useEffect(() => {
+        setDisplayCount(ARTICLES_PER_PAGE);
+    }, [currentView, selectedCategory]);
 
     const handleCategorySelect = (categoryName: string | 'HOME') => {
         if (categoryName === 'HOME') {
@@ -41,16 +43,18 @@ const NewsDashboard: React.FC<NewsDashboardProps> = ({ initialArticles, initialA
         }
     };
 
-    const breakingNews = initialArticles.find(a => a.breaking); // Use initialArticles for breaking news? 
-    // Wait, filteredArticles might exclude breaking news if filtered by category.
-    // The original logic: breaking news is from ARTICLES.find.
-    // So here using initialArticles is correct.
+    const handleLoadMore = () => {
+        setDisplayCount(prev => prev + ARTICLES_PER_PAGE);
+    };
 
-    // Original logic: 
-    // const breakingNews = ARTICLES.find(a => a.breaking);
-    // const otherNews = filteredArticles.filter(a => a.id !== breakingNews?.id);
+    const breakingNews = initialArticles.find(a => a.breaking);
 
-    const otherNews = filteredArticles.filter(a => a.id !== breakingNews?.id);
+    const otherNews = filteredArticles.filter(a =>
+        currentView === 'HOME' ? a.id !== breakingNews?.id : true
+    );
+
+    const displayedNews = otherNews.slice(0, displayCount);
+    const hasMore = displayCount < otherNews.length;
 
     return (
         <div className="min-h-screen flex flex-col font-serif-body bg-[#faf8f3] selection:bg-amber-200 selection:text-[#4b3634]">
@@ -62,7 +66,6 @@ const NewsDashboard: React.FC<NewsDashboardProps> = ({ initialArticles, initialA
                     {/* Main Content Area */}
                     <div className="lg:col-span-8 lg:border-r border-zinc-300 lg:pr-8">
 
-                        {/* Article View Removed - Routing Implemented */}
                         <div className="animate-fade-in">
 
                             {/* Section Header */}
@@ -101,7 +104,7 @@ const NewsDashboard: React.FC<NewsDashboardProps> = ({ initialArticles, initialA
 
                             {/* Article Grid */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-12">
-                                {otherNews.map((article) => (
+                                {displayedNews.map((article) => (
                                     <Link href={`/articles/${article.slug}`} key={article.id} className="group cursor-pointer flex flex-col">
                                         {article.imageUrl && (
                                             <div className="mb-3 overflow-hidden border border-zinc-200">
@@ -130,6 +133,21 @@ const NewsDashboard: React.FC<NewsDashboardProps> = ({ initialArticles, initialA
                                 )}
                             </div>
 
+                            {/* Load More Button */}
+                            {hasMore && (
+                                <div className="mt-12 flex justify-center">
+                                    <button
+                                        onClick={handleLoadMore}
+                                        className="group relative bg-[#4b3634] text-white px-8 py-4 font-headline text-lg uppercase tracking-widest hover:bg-zinc-900 transition-all duration-300 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px]"
+                                    >
+                                        <span className="flex items-center gap-2">
+                                            Загрузить ещё
+                                            <ChevronRight className="group-hover:translate-x-1 transition-transform" size={20} />
+                                        </span>
+                                    </button>
+                                </div>
+                            )}
+
                         </div>
                     </div>
 
@@ -140,8 +158,6 @@ const NewsDashboard: React.FC<NewsDashboardProps> = ({ initialArticles, initialA
 
                 </div>
             </main>
-
-            <Footer />
         </div>
     );
 };

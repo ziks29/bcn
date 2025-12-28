@@ -1,6 +1,12 @@
 import React from 'react';
+import Link from 'next/link';
+import { prisma } from '@/lib/prisma';
 
-const Footer: React.FC = () => {
+const Footer = async () => {
+  const contacts = await prisma.contact.findMany({
+    orderBy: { order: 'asc' }
+  });
+
   return (
     <footer className="bg-zinc-900 text-[#faf8f3] py-12 mt-12 border-t-8 border-[#4b3634]">
       <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -30,12 +36,32 @@ const Footer: React.FC = () => {
         </div>
 
         <div>
+          <h3 className="font-headline font-bold text-lg mb-4 uppercase tracking-wider text-amber-600">Услуги</h3>
+          <ul className="space-y-2 font-serif-body text-sm text-zinc-300">
+            <li>
+              <Link href="/services" className="hover:text-amber-600 transition-colors">
+                Медиа & Продакшн
+              </Link>
+            </li>
+            <li>
+              <Link href="/services" className="hover:text-amber-600 transition-colors">
+                Реклама
+              </Link>
+            </li>
+            <li>
+              <Link href="/services" className="hover:text-amber-600 transition-colors">
+                Контент
+              </Link>
+            </li>
+          </ul>
+        </div>
+
+        <div>
           <h3 className="font-headline font-bold text-lg mb-4 uppercase tracking-wider text-amber-600">Контакты</h3>
           <ul className="space-y-2 font-serif-body text-sm text-zinc-300">
-            <li>Инфо: 555-0100</li>
-            <li>Реклама: 555-0199</li>
-            <li>Юристы: Не беспокоить.</li>
-            <li>Адрес: Аэродром Сэнди Шорс, Ангар 2</li>
+            {contacts.map(contact => (
+              <li key={contact.id}>{contact.name}: {contact.phone}</li>
+            ))}
           </ul>
         </div>
       </div>

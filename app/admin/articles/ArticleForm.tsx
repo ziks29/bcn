@@ -21,6 +21,11 @@ export function ArticleForm({
             const result = await action(formData);
 
             if (result.success) {
+                // Clear draft from localStorage on successful save
+                if (typeof window !== 'undefined' && (window as any).__clearArticleDraft) {
+                    (window as any).__clearArticleDraft();
+                }
+
                 toast.success(result.message);
                 if (result.redirect) {
                     router.push(result.redirect);

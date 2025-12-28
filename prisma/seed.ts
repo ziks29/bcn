@@ -129,13 +129,38 @@ async function main() {
     ];
 
     for (const ad of ADS) {
-        await prisma.ad.create({
-            data: {
-                ...ad,
-                status: "PUBLISHED"
-            }
+        const existing = await prisma.ad.findFirst({
+            where: { company: ad.company }
         })
-        console.log(`Created ad: ${ad.company}`)
+        if (!existing) {
+            await prisma.ad.create({
+                data: {
+                    ...ad,
+                    status: "PUBLISHED"
+                }
+            })
+            console.log(`Created ad: ${ad.company}`)
+        } else {
+            console.log(`Ad already exists: ${ad.company}`)
+        }
+    }
+
+    // 4. Create Contacts
+    const CONTACTS = [
+        { name: "Molly Mercantile", phone: "480-7993", order: 1 },
+        { name: "Crystal Waldorf", phone: "907-5076", order: 2 },
+        { name: "Zach Waldorf", phone: "205-8357", order: 3 },
+        { name: "Ashley Vesper", phone: "480-3383", order: 4 },
+        { name: "Jean Pidieu", phone: "205-2075", order: 5 }
+    ];
+
+    for (const contact of CONTACTS) {
+        await prisma.contact.upsert({
+            where: { phone: contact.phone },
+            update: contact,
+            create: contact
+        })
+        console.log(`Upserted contact: ${contact.name}`)
     }
 }
 

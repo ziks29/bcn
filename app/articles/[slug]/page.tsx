@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { getArticleBySlug } from '@/services/articles';
 import ArticleView from '@/components/ArticleView';
 import ArticleLayout from '@/components/ArticleLayout';
+import Footer from '@/components/Footer';
 import { prisma } from '@/lib/prisma';
 
 interface PageProps {
@@ -43,15 +44,18 @@ export default async function ArticlePage({ params }: PageProps) {
     }
 
     return (
-        <ArticleLayout ads={ads} categories={categories.map(c => c.name)}>
-            {article.status !== "PUBLISHED" && (
-                <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4" role="alert">
-                    <p className="font-bold">Режим предварительного просмотра</p>
-                    <p>Эта статья имеет статус: {article.status || "DRAFT"}</p>
-                </div>
-            )}
-            <ArticleView article={article} />
-        </ArticleLayout>
+        <>
+            <ArticleLayout ads={ads} categories={categories.map(c => c.name)}>
+                {article.status !== "PUBLISHED" && (
+                    <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4" role="alert">
+                        <p className="font-bold">Режим предварительного просмотра</p>
+                        <p>Эта статья имеет статус: {article.status || "DRAFT"}</p>
+                    </div>
+                )}
+                <ArticleView article={article} />
+            </ArticleLayout>
+            <Footer />
+        </>
     );
 }
 

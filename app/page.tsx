@@ -1,5 +1,6 @@
 import { getArticles } from "@/services/articles";
 import NewsDashboard from "@/components/NewsDashboard";
+import Footer from "@/components/Footer";
 import { prisma } from "@/lib/prisma";
 
 // Force dynamic rendering to fetch fresh data
@@ -14,9 +15,14 @@ export default async function Home() {
         orderBy: { createdAt: 'asc' }
     });
 
-    return <NewsDashboard
-        initialArticles={articles}
-        initialAds={ads}
-        categories={categories.map(c => c.name)}
-    />;
+    return (
+        <>
+            <NewsDashboard
+                initialArticles={articles}
+                initialAds={ads}
+                categories={categories.map(c => c.name)}
+            />
+            <Footer />
+        </>
+    );
 }

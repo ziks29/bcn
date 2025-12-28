@@ -128,7 +128,11 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect, categories }) => {
               ))}
               <li className="pt-4 flex justify-between items-center text-[10px] text-zinc-400 font-sans tracking-normal uppercase">
                 <span>&copy; Blaine Gazette 2025</span>
-                <Link href="/login" className="text-amber-700 font-bold" onClick={() => setIsMenuOpen(false)}>Личный кабинет</Link>
+                {session ? (
+                  <Link href="/admin" className="text-amber-700 font-bold" onClick={() => setIsMenuOpen(false)}>Редакторская</Link>
+                ) : (
+                  <Link href="/login" className="text-amber-700 font-bold" onClick={() => setIsMenuOpen(false)}>Вход для журналистов</Link>
+                )}
               </li>
             </ul>
           </div>

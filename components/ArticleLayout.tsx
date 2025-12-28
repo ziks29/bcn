@@ -4,7 +4,6 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import Header from './Header';
 import Sidebar from './Sidebar';
-import Footer from './Footer';
 import { Ad } from '../types';
 
 interface ArticleLayoutProps {
@@ -39,8 +38,6 @@ export default function ArticleLayout({ children, ads, categories }: ArticleLayo
                     </div>
                 </div>
             </main>
-
-            <Footer />
         </div>
     );
 }

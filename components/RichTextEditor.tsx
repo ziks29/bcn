@@ -240,10 +240,19 @@ export default function RichTextEditor({ content, onChange }: RichTextEditorProp
 
     useEffect(() => {
         if (editor && content && editor.getHTML() !== content) {
-            // Only update if difference is significant or on initial load
-            // This is a naive check; ideally we don't want to reset cursor position
-            // But since this is a controlled component from outside, it might be tricky.
-            // For now, we rely on the fact that the parent probably only sets initialContent.
+            // Update editor content when it changes from outside (e.g., draft restoration)
+            // Use commands.setContent to update without breaking the transaction
+            const { from, to } = editor.state.selection;
+            editor.commands.setContent(content);
+
+            // Try to restore cursor position if the document is still valid
+            try {
+                if (from <= editor.state.doc.content.size) {
+                    editor.commands.setTextSelection({ from: Math.min(from, editor.state.doc.content.size), to: Math.min(to, editor.state.doc.content.size) });
+                }
+            } catch (e) {
+                // Cursor position restoration failed, that's okay
+            }
         }
     }, [content, editor])
 

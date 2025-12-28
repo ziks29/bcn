@@ -84,7 +84,7 @@ export default async function NewArticlePage() {
 
                         <div>
                             <label className="block text-xs font-bold uppercase tracking-widest mb-1">Текст статьи</label>
-                            <ArticleEditorInput initialContent="" />
+                            <ArticleEditorInput initialContent="" articleId="new" />
                         </div>
                     </div>
                 </ArticleForm>
