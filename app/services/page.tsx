@@ -3,6 +3,9 @@ import Link from "next/link";
 import { Video, Megaphone, FileText, Globe } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 
+// Force dynamic rendering - this page queries the database
+export const dynamic = 'force-dynamic';
+
 export default async function ServicesPage() {
     const contacts = await prisma.contact.findMany({
         orderBy: { order: 'asc' }
