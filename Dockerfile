@@ -23,6 +23,7 @@ WORKDIR /app
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/package.json ./package.json
+COPY --from=deps /app/pnpm-lock.yaml* ./
 
 # Copy Prisma schema first
 COPY prisma ./prisma
