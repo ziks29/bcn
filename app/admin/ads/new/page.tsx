@@ -17,16 +17,16 @@ export default async function NewAdPage() {
                     <h1 className="font-headline text-4xl uppercase tracking-tighter mt-2">Новая Реклама</h1>
                 </div>
 
-                <AdForm action={createAd} submitLabel="\u0421\u043e\u0437\u0434\u0430\u0442\u044c">
+                <AdForm action={createAd} submitLabel="Создать">
                     <div className="grid grid-cols-1 gap-6">
                         <div>
-                            <label className="block text-xs font-bold uppercase tracking-widest mb-1">\u041a\u043e\u043c\u043f\u0430\u043d\u0438\u044f</label>
-                            <input name="company" required className="w-full border-2 border-black p-2 font-bold focus:bg-yellow-50" placeholder="\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u043a\u043e\u043c\u043f\u0430\u043d\u0433\u0438..." />
+                            <label className="block text-xs font-bold uppercase tracking-widest mb-1">Компания</label>
+                            <input name="company" required className="w-full border-2 border-black p-2 font-bold focus:bg-yellow-50" placeholder="Название компании..." />
                         </div>
 
                         <div>
-                            <label className="block text-xs font-bold uppercase tracking-widest mb-1">\u0421\u043b\u043e\u0433\u0430\u043d</label>
-                            <textarea name="tagline" required rows={2} className="w-full border-2 border-black p-2" placeholder="\u0411\u0440\u043e\u0441\u043a\u0438\u0439 \u0441\u043b\u043e\u0433\u0430\u043d..."></textarea>
+                            <label className="block text-xs font-bold uppercase tracking-widest mb-1">Слоган</label>
+                            <textarea name="tagline" required rows={2} className="w-full border-2 border-black p-2" placeholder="Броский слоган..."></textarea>
                         </div>
 
                         <div>

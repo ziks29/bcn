@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { X, Upload, Link as LinkIcon, Loader2 } from "lucide-react";
+import { X, Upload, Link as LinkIcon, Loader2, CheckCircle2 } from "lucide-react";
 import Image from "next/image";
-import { getGalleryItems, uploadGalleryImage, addExternalImage } from "@/app/admin/gallery/actions";
+import { getGalleryItemsWithUsage, uploadGalleryImage, addExternalImage } from "@/app/admin/gallery/actions";
 import { toast } from "sonner";
 
 interface GalleryItem {
@@ -12,6 +12,9 @@ interface GalleryItem {
     name: string | null;
     type: string;
     createdAt: Date;
+    usageCount: number;
+    usedInArticles: Array<{ id: string; title: string }>;
+    usedInAds: Array<{ id: string; company: string }>;
 }
 
 interface GalleryModalProps {
@@ -37,7 +40,7 @@ export default function GalleryModal({ isOpen, onClose, onSelect }: GalleryModal
     const loadItems = async () => {
         setLoading(true);
         try {
-            const data = await getGalleryItems();
+            const data = await getGalleryItemsWithUsage();
             setItems(data);
         } catch (error) {
             console.error("Failed to load gallery items", error);
@@ -202,6 +205,14 @@ export default function GalleryModal({ isOpen, onClose, onSelect }: GalleryModal
                                         />
                                     </div>
                                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+
+                                    {/* Usage Badge */}
+                                    {item.usageCount > 0 && (
+                                        <div className="absolute top-2 right-2 flex items-center gap-1 bg-emerald-600 text-white text-[10px] font-bold uppercase px-2 py-1 rounded-sm shadow-sm">
+                                            <CheckCircle2 size={12} />
+                                            <span>{item.usageCount}</span>
+                                        </div>
+                                    )}
                                 </button>
                             ))}
                             {items.length === 0 && (

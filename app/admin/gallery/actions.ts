@@ -63,19 +63,69 @@ export async function addExternalImage(url: string) {
     }
 
     try {
-        await prisma.galleryItem.create({
-            data: {
-                url,
-                name: "External Image",
-                type: "EXTERNAL",
-            },
-        });
+        // Check if URL is from Discord
+        const isDiscordUrl = url.includes("discord.com") || url.includes("discordapp.net") || url.includes("cdn.discordapp.com");
 
-        revalidatePath("/admin/gallery");
-        return { success: true };
+        if (isDiscordUrl) {
+            // Download Discord images to prevent expiration
+            const response = await fetch(url);
+            if (!response.ok) {
+                return { success: false, error: "Failed to download image from Discord" };
+            }
+
+            // Get the content type to determine file extension
+            const contentType = response.headers.get("content-type");
+            if (!contentType || !contentType.startsWith("image/")) {
+                return { success: false, error: "URL does not point to an image" };
+            }
+
+            // Determine file extension
+            let extension = "jpg";
+            if (contentType.includes("png")) extension = "png";
+            else if (contentType.includes("webp")) extension = "webp";
+            else if (contentType.includes("gif")) extension = "gif";
+            else if (contentType.includes("jpeg")) extension = "jpg";
+
+            // Get the image data as buffer
+            const arrayBuffer = await response.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+
+            // Create unique filename
+            const filename = `${uuidv4()}.${extension}`;
+            const uploadDir = path.join(process.cwd(), "public", "uploads");
+
+            // Save the file
+            await mkdir(uploadDir, { recursive: true });
+            await writeFile(path.join(uploadDir, filename), buffer);
+            const localUrl = `/uploads/${filename}`;
+
+            // Create gallery item with local URL
+            await prisma.galleryItem.create({
+                data: {
+                    url: localUrl,
+                    name: "Discord Image (downloaded)",
+                    type: "EXTERNAL",
+                },
+            });
+
+            revalidatePath("/admin/gallery");
+            return { success: true, url: localUrl };
+        } else {
+            // For non-Discord URLs, just store the URL directly
+            await prisma.galleryItem.create({
+                data: {
+                    url,
+                    name: "External Image",
+                    type: "EXTERNAL",
+                },
+            });
+
+            revalidatePath("/admin/gallery");
+            return { success: true, url };
+        }
     } catch (error) {
         console.error("Add external image error:", error);
-        return { success: false, error: "Failed to add image" };
+        return { success: false, error: "Failed to process image" };
     }
 }
 
@@ -119,4 +169,39 @@ export async function getGalleryItems() {
     return await prisma.galleryItem.findMany({
         orderBy: { createdAt: "desc" },
     });
+}
+
+export async function getGalleryItemsWithUsage() {
+    const session = await auth();
+    if (!session) {
+        return [];
+    }
+
+    const items = await prisma.galleryItem.findMany({
+        orderBy: { createdAt: "desc" },
+    });
+
+    // Get all articles and ads
+    const articles = await prisma.article.findMany({
+        select: { id: true, title: true, image: true },
+    });
+
+    const ads = await prisma.ad.findMany({
+        select: { id: true, company: true, imageUrl: true },
+    });
+
+    // Map items to include usage information
+    const itemsWithUsage = items.map(item => {
+        const usedInArticles = articles.filter(article => article.image === item.url);
+        const usedInAds = ads.filter(ad => ad.imageUrl === item.url);
+
+        return {
+            ...item,
+            usageCount: usedInArticles.length + usedInAds.length,
+            usedInArticles: usedInArticles.map(a => ({ id: a.id, title: a.title })),
+            usedInAds: usedInAds.map(a => ({ id: a.id, company: a.company })),
+        };
+    });
+
+    return itemsWithUsage;
 }

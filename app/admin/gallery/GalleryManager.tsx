@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { uploadGalleryImage, addExternalImage, deleteGalleryItem } from "./actions";
 import { toast } from "sonner";
-import { Trash2, Link as LinkIcon, Upload, Loader2, Copy } from "lucide-react";
+import { Trash2, Link as LinkIcon, Upload, Loader2, Copy, CheckCircle2 } from "lucide-react";
 import Image from "next/image";
 
 interface GalleryItem {
@@ -12,6 +12,9 @@ interface GalleryItem {
     name: string | null;
     type: string;
     createdAt: Date;
+    usageCount: number;
+    usedInArticles: Array<{ id: string; title: string }>;
+    usedInAds: Array<{ id: string; company: string }>;
 }
 
 export default function GalleryManager({ initialItems }: { initialItems: GalleryItem[] }) {
@@ -196,6 +199,43 @@ export default function GalleryManager({ initialItems }: { initialItems: Gallery
                                 {item.type === 'UPLOAD' ? 'Файл' : 'Ссылка'}
                             </span>
                         </div>
+
+                        {/* Usage Badge */}
+                        {item.usageCount > 0 && (
+                            <div className="absolute top-2 right-2 group/tooltip">
+                                <div className="flex items-center gap-1 bg-emerald-600 text-white text-[10px] font-bold uppercase px-2 py-1 rounded-sm shadow-sm">
+                                    <CheckCircle2 size={12} />
+                                    <span>{item.usageCount}</span>
+                                </div>
+
+                                {/* Tooltip */}
+                                <div className="absolute right-0 top-full mt-2 w-64 bg-black text-white text-xs p-3 rounded shadow-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all z-10 pointer-events-none">
+                                    <div className="font-bold mb-2 uppercase tracking-wider">Используется в:</div>
+
+                                    {item.usedInArticles.length > 0 && (
+                                        <div className="mb-2">
+                                            <div className="text-emerald-400 font-semibold mb-1">Статьи ({item.usedInArticles.length}):</div>
+                                            <ul className="list-disc list-inside space-y-1">
+                                                {item.usedInArticles.map(article => (
+                                                    <li key={article.id} className="truncate">{article.title}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+
+                                    {item.usedInAds.length > 0 && (
+                                        <div>
+                                            <div className="text-blue-400 font-semibold mb-1">Реклама ({item.usedInAds.length}):</div>
+                                            <ul className="list-disc list-inside space-y-1">
+                                                {item.usedInAds.map(ad => (
+                                                    <li key={ad.id} className="truncate">{ad.company}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 ))}
 

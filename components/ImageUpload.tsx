@@ -75,56 +75,14 @@ export default function ImageUpload({ name, defaultValue }: ImageUploadProps) {
             <input type="hidden" name={name} value={imageUrl || ""} />
 
             {!imageUrl ? (
-                <div className="space-y-2">
-                    <div
-                        onClick={() => fileInputRef.current?.click()}
-                        onDragOver={onDragOver}
-                        onDragLeave={onDragLeave}
-                        onDrop={onDrop}
-                        className={`
-                            border-2 border-dashed p-8 text-center cursor-pointer transition-colors relative
-                            flex flex-col items-center justify-center min-h-[200px]
-                            ${isDragging ? "border-blue-500 bg-blue-50" : "border-zinc-300 hover:border-zinc-800 bg-white"}
-                            ${error ? "border-red-500 bg-red-50" : ""}
-                        `}
-                    >
-                        <input
-                            type="file"
-                            ref={fileInputRef}
-                            onChange={(e) => e.target.files && e.target.files.length > 0 && handleFile(e.target.files[0])}
-                            className="hidden"
-                            accept="image/*"
-                        />
-
-                        {isPending ? (
-                            <div className="flex flex-col items-center text-zinc-500">
-                                <Loader2 className="animate-spin mb-2" size={32} />
-                                <span className="text-xs font-bold uppercase tracking-widest">Загрузка...</span>
-                            </div>
-                        ) : (
-                            <>
-                                <Upload size={32} className="mb-2 text-zinc-400" />
-                                <p className="font-bold text-sm mb-1">Нажмите или перетащите фото сюда</p>
-                                <p className="text-xs text-zinc-500">JPG, PNG, WEBP (до 5MB)</p>
-                            </>
-                        )}
-
-                        {error && (
-                            <p className="mt-4 text-xs font-bold text-red-600 bg-red-100 px-2 py-1 absolute bottom-2">
-                                {error}
-                            </p>
-                        )}
-                    </div>
-
-                    <button
-                        type="button"
-                        onClick={() => setIsGalleryOpen(true)}
-                        className="w-full bg-zinc-100 hover:bg-zinc-200 text-black py-2 font-bold uppercase text-sm border-2 border-zinc-200 hover:border-black transition-colors flex items-center justify-center gap-2"
-                    >
-                        <Grid size={16} />
-                        Выбрать из галереи
-                    </button>
-                </div>
+                <button
+                    type="button"
+                    onClick={() => setIsGalleryOpen(true)}
+                    className="w-full bg-zinc-100 hover:bg-zinc-200 text-black py-3 font-bold uppercase text-sm border-2 border-zinc-200 hover:border-black transition-colors flex items-center justify-center gap-2"
+                >
+                    <Grid size={16} />
+                    Выбрать из галереи
+                </button>
             ) : (
                 <div className="relative border-2 border-black bg-zinc-100 group">
                     <img

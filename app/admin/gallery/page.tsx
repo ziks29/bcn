@@ -2,14 +2,14 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import GalleryManager from "./GalleryManager";
-import { getGalleryItems } from "./actions";
+import { getGalleryItemsWithUsage } from "./actions";
 import Link from "next/link";
 
 export default async function GalleryPage() {
     const session = await auth();
     if (!session) redirect("/login");
 
-    const items = await getGalleryItems();
+    const items = await getGalleryItemsWithUsage();
 
     return (
         <div className="min-h-screen bg-[#f4f1ea] p-4 md:p-8 font-serif-body">
