@@ -5,31 +5,16 @@ set -e
 
 echo "Starting BCN App Entrypoint..."
 
-# Fix permissions on the volumes if we are running as root
-if [ "$(id -u)" = '0' ]; then
-  echo "Fixing permissions on /app/prisma and /app/.next..."
-  chown -R nextjs:nodejs /app/prisma
-  chown -R nextjs:nodejs /app/.next
-  
-  # Also ensure the entrypoint is run as nextjs
-  echo "Dropping privileges to nextjs..."
-  # Re-run this script as nextjs user if we started as root
-  exec su-exec nextjs:nodejs "$0" "$@"
-fi
-
-# Everything below runs as the nextjs user
-
-# Run Prisma migrations
+# Run Prisma database sync
 if [ -n "$DATABASE_URL" ]; then
-  echo "Synchronizing Prisma schema..."
-  # Use db push instead of migrate deploy since we don't have a migrations folder yet
+  echo "Synchronizing Prisma schema with MongoDB Atlas..."
   prisma db push --schema=./prisma/schema.prisma --accept-data-loss --skip-generate
   
-  # Optional: Seed data if needed
+  # Optional: Seed data if needed (uncomment to enable)
   # echo "Seeding database..."
   # npx prisma db seed
 else
-  echo "WARNING: DATABASE_URL not set, skipping migrations"
+  echo "WARNING: DATABASE_URL not set, skipping database sync"
 fi
 
 # Execute the main command (passed as CMD in Dockerfile)

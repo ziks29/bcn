@@ -4,12 +4,12 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id        String   @id @default(cuid())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   username  String   @unique
   displayName String?
   bio       String?
@@ -21,7 +21,7 @@ model User {
 }
 
 model Article {
-  id        String   @id @default(cuid())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   title     String
   slug      String   @unique
   excerpt   String
@@ -36,11 +36,11 @@ model Article {
   updatedAt DateTime @updatedAt
   
   author    User     @relation(fields: [authorId], references: [id])
-  authorId  String
+  authorId  String   @db.ObjectId
 }
 
 model Ad {
-  id        String   @id @default(cuid())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   company   String
   tagline   String
   imageUrl  String
@@ -54,7 +54,7 @@ model Ad {
 }
 
 model GalleryItem {
-  id        String   @id @default(cuid())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   url       String
   name      String?
   type      String   @default("UPLOAD") // "UPLOAD" or "EXTERNAL"
@@ -62,14 +62,14 @@ model GalleryItem {
 }
 
 model Category {
-  id        String   @id @default(cuid())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   name      String   @unique
   slug      String   @unique
   createdAt DateTime @default(now())
 }
 
 model Contact {
-  id        String   @id @default(cuid())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   name      String
   phone     String   @unique
   order     Int      @default(0)

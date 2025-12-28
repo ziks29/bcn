@@ -145,7 +145,25 @@ async function main() {
         }
     }
 
-    // 4. Create Contacts
+    // 4. Create Categories
+    const CATEGORIES = [
+        { name: "Местные новости", slug: "local-news" },
+        { name: "Криминал", slug: "crime" },
+        { name: "Стиль жизни", slug: "lifestyle" },
+        { name: "Мнение", slug: "opinion" },
+        { name: "Бизнес и Мет", slug: "business-meth" }
+    ];
+
+    for (const category of CATEGORIES) {
+        await prisma.category.upsert({
+            where: { slug: category.slug },
+            update: category,
+            create: category
+        })
+        console.log(`Upserted category: ${category.name}`)
+    }
+
+    // 5. Create Contacts
     const CONTACTS = [
         { name: "Molly Mercantile", phone: "480-7993", order: 1 },
         { name: "Crystal Waldorf", phone: "907-5076", order: 2 },

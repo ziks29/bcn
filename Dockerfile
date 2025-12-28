@@ -47,7 +47,7 @@ RUN chmod +x entrypoint.sh
 ENV NEXT_TELEMETRY_DISABLED=1
 # Set dummy build-time environment variables
 # These will be overridden at runtime by the actual .env file
-ENV DATABASE_URL="file:./prisma/dev.db"
+ENV DATABASE_URL="mongodb+srv://user:pass@cluster.mongodb.net/db?retryWrites=true&w=majority"
 ENV NEXTAUTH_URL="http://localhost:3000"
 ENV NEXTAUTH_SECRET="build-time-secret-will-be-overridden-at-runtime"
 
@@ -61,7 +61,7 @@ RUN if [ -f pnpm-lock.yaml ]; then \
 
 # Stage 3: Runner
 FROM node:20-alpine AS runner
-RUN apk add --no-cache libc6-compat openssl su-exec
+RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -80,15 +80,11 @@ COPY --from=builder /app/entrypoint.sh ./entrypoint.sh
 # Install Prisma CLI globally so it's available in the runner
 RUN npm install -g prisma@5.22.0
 
-# Ensure prisma directory exists
-RUN mkdir -p /app/prisma
-
 # Ensure entrypoint is executable
-USER root
 RUN chmod +x entrypoint.sh
 
-# Do NOT switch to nextjs user here, we will use su-exec in entrypoint.sh 
-# to fix volume permissions at runtime and then drop privileges.
+# Switch to non-root user
+USER nextjs
 
 EXPOSE 3000
 
