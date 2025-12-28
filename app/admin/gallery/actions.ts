@@ -3,7 +3,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { writeFile, mkdir } from "fs/promises";
+import { writeFile, mkdir, chmod } from "fs/promises";
 import path from "path";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -29,7 +29,16 @@ export async function uploadGalleryImage(formData: FormData) {
 
     try {
         await mkdir(uploadDir, { recursive: true });
-        await writeFile(path.join(uploadDir, filename), buffer);
+        const filePath = path.join(uploadDir, filename);
+        await writeFile(filePath, buffer);
+
+        // Ensure file has correct permissions (readable by all)
+        try {
+            await chmod(filePath, 0o644);
+        } catch (chmodError) {
+            console.warn("Could not set file permissions:", chmodError);
+        }
+
         const url = `/uploads/${filename}`;
 
         await prisma.galleryItem.create({
@@ -68,48 +77,85 @@ export async function addExternalImage(url: string) {
 
         if (isDiscordUrl) {
             // Download Discord images to prevent expiration
-            const response = await fetch(url);
-            if (!response.ok) {
-                return { success: false, error: "Failed to download image from Discord" };
+            console.log("Discord URL detected, fetching image...");
+
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (compatible; BCN-NewsBot/1.0)',
+                    },
+                });
+                console.log("Fetch response status:", response.status, response.statusText);
+
+                if (!response.ok) {
+                    console.error("Failed to fetch Discord image:", response.status, response.statusText);
+                    return { success: false, error: `Failed to download image from Discord (${response.status})` };
+                }
+
+                // Get the content type to determine file extension
+                const contentType = response.headers.get("content-type");
+                console.log("Content-Type:", contentType);
+
+                if (!contentType || !contentType.startsWith("image/")) {
+                    console.error("Invalid content type:", contentType);
+                    return { success: false, error: `URL does not point to an image (received ${contentType})` };
+                }
+
+                // Determine file extension
+                let extension = "jpg";
+                if (contentType.includes("png")) extension = "png";
+                else if (contentType.includes("webp")) extension = "webp";
+                else if (contentType.includes("gif")) extension = "gif";
+                else if (contentType.includes("jpeg")) extension = "jpg";
+
+                console.log("Determined file extension:", extension);
+
+                // Get the image data as buffer
+                const arrayBuffer = await response.arrayBuffer();
+                const buffer = Buffer.from(arrayBuffer);
+                console.log("Image buffer size:", buffer.length, "bytes");
+
+                if (buffer.length === 0) {
+                    console.error("Downloaded image has 0 bytes");
+                    return { success: false, error: "Downloaded image is empty" };
+                }
+
+                // Create unique filename
+                const filename = `${uuidv4()}.${extension}`;
+                const uploadDir = path.join(process.cwd(), "public", "uploads");
+                const filePath = path.join(uploadDir, filename);
+                console.log("Saving to:", filePath);
+
+                // Save the file
+                await mkdir(uploadDir, { recursive: true });
+                await writeFile(filePath, buffer);
+
+                // Ensure file has correct permissions (readable by all)
+                try {
+                    await chmod(filePath, 0o644);
+                    console.log("Set file permissions to 0o644");
+                } catch (chmodError) {
+                    console.warn("Could not set file permissions:", chmodError);
+                }
+
+                const localUrl = `/uploads/${filename}`;
+                console.log("Successfully saved Discord image as:", localUrl);
+
+                // Create gallery item with local URL
+                await prisma.galleryItem.create({
+                    data: {
+                        url: localUrl,
+                        name: "Discord Image (downloaded)",
+                        type: "EXTERNAL",
+                    },
+                });
+
+                revalidatePath("/admin/gallery");
+                return { success: true, url: localUrl };
+            } catch (fetchError) {
+                console.error("Discord fetch error:", fetchError);
+                return { success: false, error: `Network error downloading Discord image: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}` };
             }
-
-            // Get the content type to determine file extension
-            const contentType = response.headers.get("content-type");
-            if (!contentType || !contentType.startsWith("image/")) {
-                return { success: false, error: "URL does not point to an image" };
-            }
-
-            // Determine file extension
-            let extension = "jpg";
-            if (contentType.includes("png")) extension = "png";
-            else if (contentType.includes("webp")) extension = "webp";
-            else if (contentType.includes("gif")) extension = "gif";
-            else if (contentType.includes("jpeg")) extension = "jpg";
-
-            // Get the image data as buffer
-            const arrayBuffer = await response.arrayBuffer();
-            const buffer = Buffer.from(arrayBuffer);
-
-            // Create unique filename
-            const filename = `${uuidv4()}.${extension}`;
-            const uploadDir = path.join(process.cwd(), "public", "uploads");
-
-            // Save the file
-            await mkdir(uploadDir, { recursive: true });
-            await writeFile(path.join(uploadDir, filename), buffer);
-            const localUrl = `/uploads/${filename}`;
-
-            // Create gallery item with local URL
-            await prisma.galleryItem.create({
-                data: {
-                    url: localUrl,
-                    name: "Discord Image (downloaded)",
-                    type: "EXTERNAL",
-                },
-            });
-
-            revalidatePath("/admin/gallery");
-            return { success: true, url: localUrl };
         } else {
             // For non-Discord URLs, just store the URL directly
             await prisma.galleryItem.create({
