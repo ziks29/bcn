@@ -110,18 +110,47 @@ const Sidebar: React.FC<SidebarProps> = ({ ads }) => {
 
       {/* Ads */}
       <div className="space-y-6">
-        {ads.map((ad) => (
-          <div key={ad.id} className="border-4 border-[#4b3634] p-2 bg-white">
-            <div className="border border-[#4b3634]/30 p-2 text-center">
-              <img src={ad.imageUrl} alt={ad.company} className={`w-full aspect-video object-cover contrast-125 mb-2 ${ad.bw ? 'grayscale' : ''}`} />
-              <h4 className="font-headline font-bold text-lg uppercase text-[#4b3634]">{ad.company}</h4>
-              <p className="font-serif-body text-xs italic mb-2 text-[#4b3634]/80">"{ad.tagline}"</p>
-              <div className="bg-[#4b3634] text-[#faf8f3] text-sm font-bold py-1 px-2 inline-block transform -rotate-2">
-                ЗВОНИТЕ: {ad.phone}
+        {ads.map((ad) => {
+          const Content = () => (
+            <div className="border-4 border-[#4b3634] p-2 bg-white transition-transform hover:scale-[1.02] cursor-pointer">
+              <div className="border border-[#4b3634]/30 p-2 text-center relative group">
+                <img src={ad.imageUrl} alt={ad.company} className={`w-full aspect-video object-cover contrast-125 mb-2 ${ad.bw ? 'grayscale' : ''}`} />
+                <h4 className="font-headline font-bold text-lg uppercase text-[#4b3634]">{ad.company}</h4>
+                {ad.districts && (
+                  <p className="font-sans text-xs font-bold uppercase text-[#4b3634] tracking-widest mb-1">
+                    District: {ad.districts}
+                  </p>
+                )}
+                <p className="font-serif-body text-xs italic mb-2 text-[#4b3634]/80">"{ad.tagline}"</p>
+
+                {ad.buttonText ? (
+                  <div className="flex items-center justify-center gap-2 mt-2">
+                    <div className="bg-[#4b3634] text-[#faf8f3] text-sm font-bold py-2 px-4">
+                      {ad.phone}
+                    </div>
+                    <span className="inline-block bg-red-700 text-white font-headline uppercase tracking-widest text-sm py-2 px-4 border-black">
+                      {ad.buttonText}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="bg-[#4b3634] text-[#faf8f3] text-sm font-bold py-1 px-2 inline-block transform -rotate-2 mb-2">
+                    ЗВОНИТЕ: {ad.phone}
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-        ))}
+          );
+
+          return ad.buttonUrl ? (
+            <a key={ad.id} href={ad.buttonUrl} target="_blank" rel="noopener noreferrer" className="block">
+              <Content />
+            </a>
+          ) : (
+            <div key={ad.id}>
+              <Content />
+            </div>
+          );
+        })}
       </div>
 
       {/* Wanted Poster Mockup */}

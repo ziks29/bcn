@@ -105,6 +105,12 @@ export async function createAd(formData: FormData) {
         const tagline = formData.get("tagline") as string;
         const imageUrl = formData.get("imageUrl") as string;
         const phone = formData.get("phone") as string;
+        const buttonText = formData.get("buttonText") as string;
+        let buttonUrl = formData.get("buttonUrl") as string;
+        if (buttonUrl && !buttonUrl.startsWith('http://') && !buttonUrl.startsWith('https://')) {
+            buttonUrl = `https://${buttonUrl}`;
+        }
+        const districts = formData.get("districts") as string;
         const bw = formData.get("bw") === "on";
         const status = formData.get("status") as string || "DRAFT";
         const publishFrom = formData.get("publishFrom") as string;
@@ -120,6 +126,9 @@ export async function createAd(formData: FormData) {
                 tagline,
                 imageUrl,
                 phone,
+                buttonText: buttonText || null,
+                buttonUrl: buttonUrl || null,
+                districts: districts || null,
                 bw,
                 status,
                 publishFrom: publishFrom ? new Date(publishFrom) : null,
@@ -147,6 +156,12 @@ export async function updateAd(id: string, formData: FormData) {
         const tagline = formData.get("tagline") as string;
         const imageUrl = formData.get("imageUrl") as string;
         const phone = formData.get("phone") as string;
+        const buttonText = formData.get("buttonText") as string;
+        let buttonUrl = formData.get("buttonUrl") as string;
+        if (buttonUrl && !buttonUrl.startsWith('http://') && !buttonUrl.startsWith('https://')) {
+            buttonUrl = `https://${buttonUrl}`;
+        }
+        const districts = formData.get("districts") as string;
         const bw = formData.get("bw") === "on";
         const status = formData.get("status") as string || "DRAFT";
         const publishFrom = formData.get("publishFrom") as string;
@@ -163,6 +178,9 @@ export async function updateAd(id: string, formData: FormData) {
                 tagline,
                 imageUrl,
                 phone,
+                buttonText: buttonText || null,
+                buttonUrl: buttonUrl || null,
+                districts: districts || null,
                 bw,
                 status,
                 publishFrom: publishFrom ? new Date(publishFrom) : null,

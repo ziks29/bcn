@@ -8,9 +8,10 @@ import GalleryModal from "@/components/GalleryModal";
 interface ImageUploadProps {
     name: string;
     defaultValue?: string | null;
+    previewClassName?: string;
 }
 
-export default function ImageUpload({ name, defaultValue }: ImageUploadProps) {
+export default function ImageUpload({ name, defaultValue, previewClassName }: ImageUploadProps) {
     const [imageUrl, setImageUrl] = useState<string | null>(defaultValue || null);
     const [isDragging, setIsDragging] = useState(false);
     const [isPending, startTransition] = useTransition();
@@ -88,7 +89,7 @@ export default function ImageUpload({ name, defaultValue }: ImageUploadProps) {
                     <img
                         src={imageUrl}
                         alt="Uploaded preview"
-                        className={`w-full h-auto max-h-[400px] object-cover ${isPending ? "opacity-50" : ""}`}
+                        className={`w-full ${previewClassName || "h-auto max-h-[400px]"} object-cover ${isPending ? "opacity-50" : ""}`}
                     />
 
                     {isPending && (

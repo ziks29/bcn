@@ -57,7 +57,7 @@ export default async function EditAdPage(props: { params: Promise<{ id: string }
 
                         <div>
                             <label className="block text-xs font-bold uppercase tracking-widest mb-1">Изображение</label>
-                            <ImageUpload name="imageUrl" defaultValue={ad.imageUrl} />
+                            <ImageUpload name="imageUrl" defaultValue={ad.imageUrl} previewClassName="aspect-video" />
                             <div className="mt-2 flex items-center gap-2">
                                 <input
                                     type="checkbox"
@@ -78,6 +78,36 @@ export default async function EditAdPage(props: { params: Promise<{ id: string }
                                 defaultValue={ad.phone}
                                 className="w-full border-2 border-black p-2"
                                 placeholder="555-0100"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold uppercase tracking-widest mb-1">Текст Кнопки (необязательно)</label>
+                            <input
+                                name="buttonText"
+                                defaultValue={ad.buttonText || ""}
+                                className="w-full border-2 border-black p-2"
+                                placeholder="Например: Купить сейчас"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold uppercase tracking-widest mb-1">Ссылка (необязательно)</label>
+                            <input
+                                name="buttonUrl"
+                                defaultValue={ad.buttonUrl || ""}
+                                className="w-full border-2 border-black p-2"
+                                placeholder="https://..."
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold uppercase tracking-widest mb-1">Районы (необязательно)</label>
+                            <input
+                                name="districts"
+                                defaultValue={ad.districts || ""}
+                                className="w-full border-2 border-black p-2"
+                                placeholder="Палето-Бэй"
                             />
                         </div>
 

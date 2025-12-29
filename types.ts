@@ -23,6 +23,9 @@ export interface Ad {
   tagline: string;
   imageUrl: string;
   phone: string;
+  buttonText?: string | null;
+  buttonUrl?: string | null;
+  districts?: string | null;
   bw?: boolean;
   status?: string;
   publishFrom?: Date | null;

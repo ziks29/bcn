@@ -45,6 +45,9 @@ model Ad {
   tagline   String
   imageUrl  String
   phone     String
+  buttonText String?
+  buttonUrl String?
+  districts String?
   bw        Boolean  @default(true)
   status    String   @default("DRAFT")
   publishFrom DateTime?

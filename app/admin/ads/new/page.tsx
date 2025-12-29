@@ -31,7 +31,7 @@ export default async function NewAdPage() {
 
                         <div>
                             <label className="block text-xs font-bold uppercase tracking-widest mb-1">Изображение</label>
-                            <ImageUpload name="imageUrl" />
+                            <ImageUpload name="imageUrl" previewClassName="aspect-video" />
                             <div className="mt-2 flex items-center gap-2">
                                 <input type="checkbox" name="bw" id="bw" defaultChecked className="w-4 h-4 accent-black" />
                                 <label htmlFor="bw" className="text-sm font-bold uppercase cursor-pointer select-none">Черно-белое</label>
@@ -41,6 +41,21 @@ export default async function NewAdPage() {
                         <div>
                             <label className="block text-xs font-bold uppercase tracking-widest mb-1">Телефон</label>
                             <input name="phone" required className="w-full border-2 border-black p-2" placeholder="555-0100" />
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold uppercase tracking-widest mb-1">Текст Кнопки (необязательно)</label>
+                            <input name="buttonText" className="w-full border-2 border-black p-2" placeholder="Например: Купить сейчас" />
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold uppercase tracking-widest mb-1">Ссылка (необязательно)</label>
+                            <input name="buttonUrl" className="w-full border-2 border-black p-2" placeholder="https://..." />
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold uppercase tracking-widest mb-1">Районы (необязательно)</label>
+                            <input name="districts" className="w-full border-2 border-black p-2" placeholder="Палето-Бэй" />
                         </div>
 
                         <div>
