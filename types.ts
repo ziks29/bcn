@@ -15,6 +15,7 @@ export interface Article {
   breaking?: boolean;
   status?: string;
   authorId?: string;
+  views?: number;
 }
 
 export interface Ad {

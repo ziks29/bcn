@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Article } from '../types';
-import { ArrowLeft, Share2, Printer, Clock } from 'lucide-react';
+import { ArrowLeft, Share2, Printer, Clock, Eye } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface ArticleViewProps {
@@ -47,9 +47,17 @@ const ArticleView: React.FC<ArticleViewProps> = ({ article, onBack }) => {
             </div>
             <div>
               <p className="font-bold text-zinc-900 uppercase text-xs">Автор: {article.author}</p>
-              <div className="flex items-center text-xs mt-0.5">
-                <Clock size={12} className="mr-1" />
-                <span>{article.date}</span>
+              <div className="flex items-center text-xs mt-0.5 gap-3">
+                <span className="flex items-center">
+                  <Clock size={12} className="mr-1" />
+                  {article.date}
+                </span>
+                {article.views !== undefined && (
+                  <span className="flex items-center text-zinc-400">
+                    <Eye size={12} className="mr-1" />
+                    {article.views} просмотров
+                  </span>
+                )}
               </div>
             </div>
           </div>

@@ -5,7 +5,7 @@ import Header from './Header';
 import Sidebar from './Sidebar';
 import Link from 'next/link';
 import { Article, Category, Ad } from '../types';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Eye } from 'lucide-react';
 
 interface NewsDashboardProps {
     initialArticles: Article[];
@@ -113,6 +113,12 @@ const NewsDashboard: React.FC<NewsDashboardProps> = ({ initialArticles, initialA
                                         )}
                                         <div className="flex items-center space-x-2 mb-2">
                                             <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 border border-zinc-300 px-1">{article.category}</span>
+                                            {article.views !== undefined && (
+                                                <span className="flex items-center gap-1 text-[10px] text-zinc-400">
+                                                    <Eye size={12} />
+                                                    {article.views}
+                                                </span>
+                                            )}
                                         </div>
                                         <h3 className="text-2xl font-newspaper font-bold leading-tight mb-2 group-hover:underline decoration-[#4b3634] decoration-2 underline-offset-2">
                                             {article.title}

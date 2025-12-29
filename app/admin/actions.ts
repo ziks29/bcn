@@ -268,3 +268,53 @@ export async function updateArticle(id: string, formData: FormData) {
         return { success: false, message: e.message || "Ошибка обновления статьи" };
     }
 }
+
+// ANALYTICS ACTIONS
+
+export async function getDashboardStats() {
+    try {
+        const session = await auth();
+        const role = (session.user as any)?.role;
+
+        // Only allow ADMIN and CHIEF_EDITOR to view stats
+        if (!session || !['ADMIN', 'CHIEF_EDITOR'].includes(role)) {
+            return null;
+        }
+
+        // Get total articles count
+        const totalArticles = await prisma.article.count();
+
+        // Get published articles count (status = PUBLISHED)
+        const publishedArticles = await prisma.article.count({
+            where: { status: "PUBLISHED" }
+        });
+
+        // Get total views across all articles
+        const articlesWithViews = await prisma.article.findMany({
+            select: { views: true }
+        });
+        const totalViews = articlesWithViews.reduce((sum, article) => sum + (article.views || 0), 0);
+
+        // Get most viewed article
+        const mostViewedArticle = await prisma.article.findFirst({
+            orderBy: { views: 'desc' },
+            select: {
+                id: true,
+                title: true,
+                views: true,
+                slug: true
+            }
+        });
+
+        return {
+            totalArticles,
+            publishedArticles,
+            totalViews,
+            mostViewedArticle,
+        };
+    } catch (error) {
+        console.error("Failed to fetch dashboard stats:", error);
+        return null;
+    }
+}
+

@@ -2,6 +2,8 @@ import { auth, signOut } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import Link from "next/link"
+import StatsWidget from "@/components/StatsWidget"
+import { getDashboardStats } from "./actions"
 
 export default async function AdminPage() {
     const session = await auth()
@@ -15,6 +17,10 @@ export default async function AdminPage() {
     const draftArticles = await prisma.article.count({ where: { status: "DRAFT" } })
     const pendingAds = await prisma.ad.count({ where: { status: "PENDING" } })
     const draftAds = await prisma.ad.count({ where: { status: "DRAFT" } })
+
+    // Fetch dashboard stats for ADMIN and CHIEF_EDITOR
+    const role = (session.user as any)?.role;
+    const stats = ['ADMIN', 'CHIEF_EDITOR'].includes(role) ? await getDashboardStats() : null;
 
     return (
         <div className="min-h-screen bg-[#f4f1ea] p-4 md:p-8 font-serif-body">
@@ -58,6 +64,11 @@ export default async function AdminPage() {
                         </Link>
                     </div>
                 </div>
+
+                {/* Stats Widget - Only for ADMIN and CHIEF_EDITOR */}
+                {stats && (
+                    <StatsWidget stats={stats} />
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     <Link href="/admin/articles" className="bg-white border-2 border-black p-5 md:p-6 active:translate-x-1 active:translate-y-1 md:hover:translate-x-1 md:hover:translate-y-1 transition-transform cursor-pointer group block min-h-[140px] flex flex-col justify-between">

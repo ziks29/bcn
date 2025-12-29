@@ -16,6 +16,7 @@ const mapPrismaArticle = (item: any): Article => ({
     breaking: false, // Default for now, can add field to DB schema later
     status: item.status,
     authorId: item.authorId,
+    views: item.views || 0,
 });
 
 export async function getArticles() {
