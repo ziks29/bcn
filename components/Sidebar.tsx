@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { STOCKS } from '../constants';
 import { Ad } from '../types';
 import { TrendingUp, TrendingDown, Sparkles, Loader2 } from 'lucide-react';
-import { generateRedneckWisdom } from '../services/geminiService';
+import { generate2026NewYearWish } from '../services/geminiService';
 import CensusWidget from './CensusWidget';
 
 interface SidebarProps {
@@ -13,37 +13,63 @@ const Sidebar: React.FC<SidebarProps> = ({ ads }) => {
   const [wisdom, setWisdom] = useState<string | null>(null);
   const [loadingWisdom, setLoadingWisdom] = useState(false);
   const [canRequest, setCanRequest] = useState(true);
+  const [dailyCount, setDailyCount] = useState(0);
 
   // Check localStorage on mount
   React.useEffect(() => {
-    const savedData = localStorage.getItem('bcn_gemini_wisdom');
+    const savedData = localStorage.getItem('bcn_gemini_wisdom_2026');
     if (savedData) {
-      const { text, timestamp } = JSON.parse(savedData);
+      const { text, timestamp, count } = JSON.parse(savedData);
       const now = new Date().getTime();
       const oneDay = 24 * 60 * 60 * 1000;
 
       if (now - timestamp < oneDay) {
         setWisdom(text);
-        setCanRequest(false);
+        const currentCount = count || 1; // Fallback for legacy single-wish data
+        setDailyCount(currentCount);
+
+        if (currentCount >= 5) {
+          setCanRequest(false);
+        }
       } else {
-        localStorage.removeItem('bcn_gemini_wisdom');
+        localStorage.removeItem('bcn_gemini_wisdom_2026');
+        setDailyCount(0);
       }
     }
   }, []);
 
   const handleGetWisdom = async () => {
     setLoadingWisdom(true);
-    const result = await generateRedneckWisdom();
+    const result = await generate2026NewYearWish();
+    const now = new Date().getTime();
+
+    // Determine timestamp: use existing start of day or set new if it's the first
+    let startTime = now;
+    const savedData = localStorage.getItem('bcn_gemini_wisdom_2026');
+    if (savedData) {
+      const parsed = JSON.parse(savedData);
+      // If still within 24h window, keep the original start time
+      if (now - parsed.timestamp < 24 * 60 * 60 * 1000) {
+        startTime = parsed.timestamp;
+      }
+    }
+
+    const newCount = dailyCount + 1;
 
     // Save to localStorage
     const dataToSave = {
       text: result,
-      timestamp: new Date().getTime()
+      timestamp: startTime,
+      count: newCount
     };
-    localStorage.setItem('bcn_gemini_wisdom', JSON.stringify(dataToSave));
+    localStorage.setItem('bcn_gemini_wisdom_2026', JSON.stringify(dataToSave));
 
     setWisdom(result);
-    setCanRequest(false);
+    setDailyCount(newCount);
+
+    if (newCount >= 5) {
+      setCanRequest(false);
+    }
     setLoadingWisdom(false);
   };
 
@@ -79,9 +105,9 @@ const Sidebar: React.FC<SidebarProps> = ({ ads }) => {
         <div className="absolute top-0 right-0 p-4 opacity-10">
           <Sparkles size={100} />
         </div>
-        <h3 className="font-newspaper text-2xl mb-2 relative z-10 text-yellow-500">Оракул Мадам Назар</h3>
+        <h3 className="font-newspaper text-2xl mb-2 relative z-10 text-yellow-500">Пророчества 2026</h3>
         <p className="text-xs font-serif-body text-zinc-400 mb-4 relative z-10">
-          Цифровая мистика. Спроси духов о главном.
+          Мадам Назар видит грядущее...
         </p>
 
         {wisdom && (
@@ -97,12 +123,12 @@ const Sidebar: React.FC<SidebarProps> = ({ ads }) => {
             className="w-full bg-yellow-600 hover:bg-yellow-500 text-zinc-900 font-bold py-2 px-4 uppercase tracking-wider text-xs transition-colors flex justify-center items-center gap-2"
           >
             {loadingWisdom ? <Loader2 className="animate-spin" size={16} /> : <Sparkles size={16} />}
-            {loadingWisdom ? 'Советуемся с духами...' : 'Получить мудрость'}
+            {loadingWisdom ? 'Гадаем...' : `Узнать судьбу (${5 - dailyCount})`}
           </button>
         ) : (
           !loadingWisdom && (
             <div className="text-center py-2 px-4 border border-zinc-700 text-zinc-500 text-[10px] uppercase tracking-[0.2em] font-sans italic opacity-60">
-              Духи отдыхают. Спросите завтра.
+              Лимит пророчеств исчерпан (5/5). Приходите завтра.
             </div>
           )
         )}

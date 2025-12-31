@@ -2,6 +2,7 @@ import React from 'react';
 import type { Metadata } from 'next';
 import { Providers } from '../components/Providers';
 import { Toaster } from 'sonner';
+import SnowParticles from '../components/SnowParticles';
 
 export const metadata: Metadata = {
   title: 'Blaine County News | Правда Глаза Колет',
@@ -52,6 +53,7 @@ export default function RootLayout({
       </head>
       <body className="bg-[#faf8f3] text-zinc-900">
         <Providers>
+          <SnowParticles />
           <div id="root">{children}</div>
           <Toaster
             position="top-center"
