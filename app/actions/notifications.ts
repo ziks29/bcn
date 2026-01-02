@@ -64,8 +64,34 @@ export async function updateNotification(id: string, data: Partial<{
     }
 }
 
+import { auth } from "@/lib/auth"
+
 export async function deleteNotification(id: string) {
     try {
+        const session = await auth()
+        if (!session?.user) {
+            return { success: false, error: "Unauthorized" }
+        }
+
+        const notification = await prisma.notification.findUnique({
+            where: { id },
+            select: { author: true }
+        })
+
+        if (!notification) {
+            return { success: false, error: "Notification not found" }
+        }
+
+        const userRole = (session.user as any).role
+        const userName = session.user.name
+
+        const isAdminOrChief = ['ADMIN', 'CHIEF_EDITOR'].includes(userRole)
+        const isAuthor = notification.author === userName
+
+        if (!isAdminOrChief && !isAuthor) {
+            return { success: false, error: "Forbidden: You can only delete your own notifications" }
+        }
+
         await prisma.notification.delete({
             where: { id }
         })

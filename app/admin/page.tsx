@@ -17,6 +17,10 @@ export default async function AdminPage() {
     const draftArticles = await prisma.article.count({ where: { status: "DRAFT" } })
     const pendingAds = await prisma.ad.count({ where: { status: "PENDING" } })
     const draftAds = await prisma.ad.count({ where: { status: "DRAFT" } })
+    const allNotifications = await prisma.notification.findMany({
+        select: { quantity: true, sentCount: true }
+    })
+    const activeNotifications = allNotifications.filter(n => n.sentCount < n.quantity).length
 
     // Fetch dashboard stats for ADMIN and CHIEF_EDITOR
     const role = (session.user as any)?.role;
@@ -140,6 +144,15 @@ export default async function AdminPage() {
                                 </div>
                                 <span className="text-teal-800 text-xs font-bold uppercase tracking-widest">Перейти &rarr;</span>
                             </Link>
+
+                            {/* Backup: Admin Only */}
+                            <Link href="/admin/backup" className="bg-white border-2 border-black p-5 md:p-6 active:translate-x-1 active:translate-y-1 md:hover:translate-x-1 md:hover:translate-y-1 transition-transform cursor-pointer group block min-h-[140px] flex flex-col justify-between">
+                                <div>
+                                    <h3 className="font-newspaper text-xl sm:text-2xl font-bold mb-2 group-hover:underline decoration-cyan-700">Бэкап</h3>
+                                    <p className="text-zinc-600 text-sm sm:text-base mb-3 md:mb-4">Скачать резервную копию базы данных.</p>
+                                </div>
+                                <span className="text-cyan-800 text-xs font-bold uppercase tracking-widest">Перейти &rarr;</span>
+                            </Link>
                         </>
                     )}
 
@@ -147,6 +160,13 @@ export default async function AdminPage() {
                         <div>
                             <h3 className="font-newspaper text-xl sm:text-2xl font-bold mb-2 group-hover:underline decoration-pink-700">Рассылки</h3>
                             <p className="text-zinc-600 text-sm sm:text-base mb-3 md:mb-4">Внутренние уведомления для сотрудников.</p>
+                            <div className="flex gap-2 flex-wrap">
+                                {activeNotifications > 0 && (
+                                    <span className="bg-zinc-400 text-white px-2 py-1 text-xs font-bold uppercase">
+                                        {activeNotifications} активных
+                                    </span>
+                                )}
+                            </div>
                         </div>
                         <span className="text-pink-800 text-xs font-bold uppercase tracking-widest">Перейти &rarr;</span>
                     </Link>

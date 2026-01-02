@@ -652,13 +652,16 @@ export default function NotificationsClient({
                                         >
                                             <Pencil size={16} />
                                         </button>
-                                        <button
-                                            onClick={() => deleteNotification(note.id)}
-                                            className="p-2 hover:bg-red-50 text-zinc-400 hover:text-red-500 transition-colors rounded-md"
-                                            title="Удалить"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
+                                        {/* Delete Button - Only Admin/Chief or Author */}
+                                        {(['ADMIN', 'CHIEF_EDITOR'].includes(userRole) || note.author === userName) && (
+                                            <button
+                                                onClick={() => deleteNotification(note.id)}
+                                                className="p-2 hover:bg-red-50 text-zinc-400 hover:text-red-500 transition-colors rounded-md"
+                                                title="Удалить"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        )}
                                     </div>
 
                                     <button

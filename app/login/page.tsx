@@ -151,7 +151,7 @@ function LoginForm() {
 
                     {mode === "signup" && (
                         <div>
-                            <label className="block text-xs font-bold uppercase tracking-widest mb-1">Номер телефона (c Telegram)</label>
+                            <label className="block text-xs font-bold uppercase tracking-widest mb-1">Номер телефона</label>
                             <input
                                 type="tel"
                                 value={phoneNumber}
