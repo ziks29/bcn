@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { updatePassword, updateProfileInfo } from "./actions";
 import { ProfileForm } from "./ProfileForm";
+import { formatPhone } from "@/lib/utils";
 
 export default async function ProfilePage() {
     const session = await auth();
@@ -18,8 +19,8 @@ export default async function ProfilePage() {
     // Ideally we should pass the raw user object here or update logic.
     // Let's assume for now we can't easily get raw username from session if name is overridden.
     // So let's fetch user.
-    const { prisma } = await import("@/lib/prisma"); // Lazy import to avoid cycle if any
-    const user = await prisma.user.findUnique({ where: { id: session.user?.id } });
+    const { prisma } = await import("@/lib/prisma");
+    const user = await prisma.user.findUnique({ where: { id: session.user.id } });
 
     return (
         <div className="min-h-screen bg-[#f4f1ea] p-8 font-serif-body">
@@ -65,6 +66,16 @@ export default async function ProfilePage() {
                                     name="displayName"
                                     defaultValue={user?.displayName || ""}
                                     placeholder={user?.username}
+                                    className="w-full border-2 border-black p-2 mb-4"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold uppercase tracking-widest mb-1">Номер телефона</label>
+                                <input
+                                    name="phoneNumber"
+                                    defaultValue={formatPhone(user?.phoneNumber) || ""}
+                                    placeholder="555-5555"
                                     className="w-full border-2 border-black p-2 mb-4"
                                 />
                             </div>

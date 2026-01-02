@@ -2,6 +2,7 @@ import Footer from "@/components/Footer";
 import Link from "next/link";
 import { Video, Megaphone, FileText, Globe } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { formatPhone } from "@/lib/utils";
 
 // Force dynamic rendering - this page queries the database
 export const dynamic = 'force-dynamic';
@@ -161,8 +162,9 @@ export default async function ServicesPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-2xl mx-auto">
                             {contacts.map(contact => (
                                 <div key={contact.id} className="bg-white/10 p-3 rounded border border-white/20">
+
                                     <p className="font-bold">{contact.name}</p>
-                                    <p className="text-amber-300">{contact.phone}</p>
+                                    <p className="text-amber-300">{formatPhone(contact.phone)}</p>
                                 </div>
                             ))}
                         </div>

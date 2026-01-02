@@ -4,6 +4,7 @@ import { useState } from "react";
 import { updateContact, deleteContact } from "./actions";
 import { toast } from "sonner";
 import { Trash2, Edit, Save, X } from "lucide-react";
+import { formatPhone } from "@/lib/utils";
 
 interface Contact {
     id: string;
@@ -115,7 +116,7 @@ export default function ContactsList({ contacts }: { contacts: Contact[] }) {
                                     </div>
                                     <div>
                                         <p className="text-xs font-bold uppercase text-zinc-500">Телефон</p>
-                                        <p>{contact.phone}</p>
+                                        <p>{formatPhone(contact.phone)}</p>
                                     </div>
                                     <div>
                                         <p className="text-xs font-bold uppercase text-zinc-500">Порядок</p>

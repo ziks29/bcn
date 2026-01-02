@@ -28,7 +28,7 @@ const Sidebar: React.FC<SidebarProps> = ({ ads }) => {
         const currentCount = count || 1; // Fallback for legacy single-wish data
         setDailyCount(currentCount);
 
-        if (currentCount >= 5) {
+        if (currentCount >= 1) {
           setCanRequest(false);
         }
       } else {
@@ -67,7 +67,7 @@ const Sidebar: React.FC<SidebarProps> = ({ ads }) => {
     setWisdom(result);
     setDailyCount(newCount);
 
-    if (newCount >= 5) {
+    if (newCount >= 1) {
       setCanRequest(false);
     }
     setLoadingWisdom(false);
@@ -123,12 +123,12 @@ const Sidebar: React.FC<SidebarProps> = ({ ads }) => {
             className="w-full bg-yellow-600 hover:bg-yellow-500 text-zinc-900 font-bold py-2 px-4 uppercase tracking-wider text-xs transition-colors flex justify-center items-center gap-2"
           >
             {loadingWisdom ? <Loader2 className="animate-spin" size={16} /> : <Sparkles size={16} />}
-            {loadingWisdom ? 'Гадаем...' : `Узнать судьбу (${5 - dailyCount})`}
+            {loadingWisdom ? 'Гадаем...' : `Узнать судьбу`}
           </button>
         ) : (
           !loadingWisdom && (
             <div className="text-center py-2 px-4 border border-zinc-700 text-zinc-500 text-[10px] uppercase tracking-[0.2em] font-sans italic opacity-60">
-              Лимит пророчеств исчерпан (5/5). Приходите завтра.
+              Лимит пророчеств исчерпан. Приходите завтра.
             </div>
           )
         )}

@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
+import { cleanPhone } from "@/lib/utils";
 
 // Ensure only ADMIN or CHIEF_EDITOR can perform these actions
 const checkAdmin = async () => {
@@ -22,6 +23,8 @@ export async function createUser(formData: FormData) {
         const username = formData.get("username") as string;
         const password = formData.get("password") as string;
         const role = formData.get("role") as string;
+        const phoneNumberInput = formData.get("phoneNumber") as string;
+        const phoneNumber = cleanPhone(phoneNumberInput);
 
         if (!username || !password || !role) {
             return { success: false, message: "Заполните все обязательные поля" };
@@ -40,6 +43,7 @@ export async function createUser(formData: FormData) {
                 password: hashedPassword,
                 role,
                 displayName: username,
+                phoneNumber,
                 approved: true  // Admin-created users are auto-approved
             }
         });

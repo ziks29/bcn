@@ -4,6 +4,7 @@ import { auth, signOut } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
+import { cleanPhone } from "@/lib/utils";
 
 export async function updateProfileInfo(formData: FormData) {
     try {
@@ -14,7 +15,10 @@ export async function updateProfileInfo(formData: FormData) {
 
         const username = formData.get("username") as string;
         const displayName = formData.get("displayName") as string;
+        const phoneNumberInput = formData.get("phoneNumber") as string;
         const bio = formData.get("bio") as string;
+
+        const phoneNumber = cleanPhone(phoneNumberInput);
 
         if (!username || username.length < 3) {
             return { success: false, message: "Имя пользователя должно быть не менее 3 символов" };
@@ -35,6 +39,7 @@ export async function updateProfileInfo(formData: FormData) {
             data: {
                 username,
                 displayName: displayName || null,
+                phoneNumber: phoneNumber || null,
                 bio: bio || null
             },
         });

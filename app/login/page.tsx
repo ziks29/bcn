@@ -13,6 +13,7 @@ function LoginForm() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [displayName, setDisplayName] = useState("");
+    const [phoneNumber, setPhoneNumber] = useState("");
     const [mode, setMode] = useState<"login" | "signup">("login");
     const [error, setError] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
@@ -47,6 +48,7 @@ function LoginForm() {
             formData.append("username", username);
             formData.append("password", password);
             formData.append("displayName", displayName);
+            formData.append("phoneNumber", phoneNumber);
 
             const result = await signup(formData);
 
@@ -55,6 +57,7 @@ function LoginForm() {
                 setUsername("");
                 setPassword("");
                 setDisplayName("");
+                setPhoneNumber("");
                 setMode("login");
             } else {
                 setError(result.message);
@@ -142,6 +145,19 @@ function LoginForm() {
                                 className="w-full bg-white border-2 border-black p-2 font-mono focus:outline-none focus:bg-yellow-50 transition-colors"
                                 required
                                 placeholder="Как вас называть"
+                            />
+                        </div>
+                    )}
+
+                    {mode === "signup" && (
+                        <div>
+                            <label className="block text-xs font-bold uppercase tracking-widest mb-1">Номер телефона (c Telegram)</label>
+                            <input
+                                type="tel"
+                                value={phoneNumber}
+                                onChange={(e) => setPhoneNumber(e.target.value)}
+                                className="w-full bg-white border-2 border-black p-2 font-mono focus:outline-none focus:bg-yellow-50 transition-colors"
+                                placeholder="555-5555"
                             />
                         </div>
                     )}

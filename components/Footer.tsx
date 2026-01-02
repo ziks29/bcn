@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
+import { formatPhone } from '@/lib/utils';
 
 const Footer = async () => {
   const contacts = await prisma.contact.findMany({
@@ -60,7 +61,7 @@ const Footer = async () => {
           <h3 className="font-headline font-bold text-lg mb-4 uppercase tracking-wider text-amber-600">Контакты</h3>
           <ul className="space-y-2 font-serif-body text-sm text-zinc-300">
             {contacts.map(contact => (
-              <li key={contact.id}>{contact.name}: {contact.phone}</li>
+              <li key={contact.id}>{contact.name}: {formatPhone(contact.phone)}</li>
             ))}
           </ul>
         </div>

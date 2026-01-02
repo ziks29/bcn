@@ -18,6 +18,11 @@ export default async function ContactsPage() {
         orderBy: { order: 'asc' }
     });
 
+    const users = await prisma.user.findMany({
+        select: { id: true, username: true, displayName: true, phoneNumber: true },
+        orderBy: { username: 'asc' }
+    });
+
     return (
         <div className="min-h-screen bg-[#f4f1ea] p-8 font-serif-body">
             <div className="max-w-4xl mx-auto">
@@ -28,7 +33,7 @@ export default async function ContactsPage() {
                 </div>
 
                 {/* Форма создания нового контакта */}
-                <CreateContactForm />
+                <CreateContactForm users={users} />
 
                 {/* Список контактов */}
                 <ContactsList contacts={contacts} />

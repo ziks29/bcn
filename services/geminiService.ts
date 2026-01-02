@@ -13,7 +13,7 @@ export const generateRedneckWisdom = async (): Promise<string> => {
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.5-flash-lite',
       contents: "Напиши короткий, смешной, сатирический 'гороскоп' или 'мудрость реднека' из 2 предложений для жителя округа Блейн (вселенная GTA V). Говори про грузовики, пришельцев, правительственные заговоры или выпивку. На русском языке.",
     });
 
@@ -31,7 +31,7 @@ export const generate2026NewYearWish = async (): Promise<string> => {
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.5-flash-lite',
       contents: "Напиши короткое, смешное, сатирическое персонализированное предсказание на 2026 год для жителя округа Блейн (вселенная GTA V). Максимум 2 предложения. На русском языке.",
     });
 

@@ -2,11 +2,15 @@
 
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
+import { cleanPhone } from "@/lib/utils"
 
 export async function signup(formData: FormData) {
     const username = formData.get("username") as string
     const password = formData.get("password") as string
     const displayName = formData.get("displayName") as string
+    const phoneNumberInput = formData.get("phoneNumber") as string
+
+    const phoneNumber = cleanPhone(phoneNumberInput)
 
     // Validate
     if (!username || !password || !displayName) {
@@ -38,6 +42,7 @@ export async function signup(formData: FormData) {
                 username,
                 password: hashedPassword,
                 displayName,
+                phoneNumber,
                 role: "AUTHOR",
                 approved: false
             }

@@ -6,6 +6,7 @@ import UserRoleSelect from "./UserRoleSelect";
 import CreateUserForm from "./CreateUserForm";
 import DeleteUserButton from "./DeleteUserButton";
 import ApproveUserButton from "./ApproveUserButton";
+import { formatPhone } from "@/lib/utils";
 
 export default async function UsersPage() {
     const session = await auth();
@@ -55,6 +56,10 @@ export default async function UsersPage() {
                                     )}
                                 </div>
                                 <p className="text-sm text-zinc-500">{user.displayName || "Без имени"}</p>
+
+                                {user.phoneNumber && (
+                                    <p className="text-sm text-zinc-500 font-mono">Tel: {formatPhone(user.phoneNumber)}</p>
+                                )}
                             </div>
 
                             <div className="flex items-center gap-2 w-full md:w-auto flex-wrap">

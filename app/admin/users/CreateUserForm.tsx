@@ -28,6 +28,10 @@ export default function CreateUserForm() {
                 <input name="password" type="password" required className="w-full border-2 border-black p-2" />
             </div>
             <div>
+                <label className="block text-xs font-bold uppercase tracking-widest mb-1">Номер телефона</label>
+                <input name="phoneNumber" placeholder="555-5555" className="w-full border-2 border-black p-2" />
+            </div>
+            <div>
                 <label className="block text-xs font-bold uppercase tracking-widest mb-1">Роль</label>
                 <select name="role" className="w-full border-2 border-black p-2 font-bold bg-white" defaultValue="AUTHOR">
                     <option value="ADMIN">Администратор (Полный доступ)</option>

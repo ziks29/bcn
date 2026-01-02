@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
+import { cleanPhone } from "@/lib/utils";
+
 export async function createContact(formData: FormData) {
     const session = await auth();
     if (!session || (session.user.role !== "ADMIN" && session.user.role !== "CHIEF_EDITOR")) {
@@ -12,8 +14,10 @@ export async function createContact(formData: FormData) {
     }
 
     const name = formData.get("name") as string;
-    const phone = formData.get("phone") as string;
+    const phoneInput = formData.get("phone") as string;
     const order = parseInt(formData.get("order") as string) || 0;
+
+    const phone = cleanPhone(phoneInput) || phoneInput; // Fallback to raw if undefined/empty, though cleanPhone handles it
 
     try {
         await prisma.contact.create({
@@ -37,8 +41,10 @@ export async function updateContact(id: string, formData: FormData) {
     }
 
     const name = formData.get("name") as string;
-    const phone = formData.get("phone") as string;
+    const phoneInput = formData.get("phone") as string;
     const order = parseInt(formData.get("order") as string) || 0;
+
+    const phone = cleanPhone(phoneInput) || phoneInput;
 
     try {
         await prisma.contact.update({
