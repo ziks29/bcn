@@ -4,7 +4,7 @@ import { useState } from "react";
 import { updateContact, deleteContact } from "./actions";
 import { toast } from "sonner";
 import { Trash2, Edit, Save, X } from "lucide-react";
-import { formatPhone } from "@/lib/utils";
+import { formatPhone, formatPhoneInput } from "@/lib/utils";
 
 interface Contact {
     id: string;
@@ -76,7 +76,7 @@ export default function ContactsList({ contacts }: { contacts: Contact[] }) {
                                     <label className="block text-xs font-bold uppercase mb-1">Телефон</label>
                                     <input
                                         value={editData.phone}
-                                        onChange={(e) => setEditData({ ...editData, phone: e.target.value })}
+                                        onChange={(e) => setEditData({ ...editData, phone: formatPhoneInput(e.target.value) })}
                                         className="w-full border-2 border-black p-2"
                                     />
                                 </div>

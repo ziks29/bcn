@@ -4,6 +4,7 @@ import Link from "next/link";
 import { createAd } from "../../actions";
 import { AdForm } from "../AdForm";
 import ImageUpload from "@/components/ImageUpload";
+import PhoneInput from "@/app/components/PhoneInput";
 
 export default async function NewAdPage() {
     const session = await auth();
@@ -40,7 +41,7 @@ export default async function NewAdPage() {
 
                         <div>
                             <label className="block text-xs font-bold uppercase tracking-widest mb-1">Телефон</label>
-                            <input name="phone" required className="w-full border-2 border-black p-2" placeholder="555-0100" />
+                            <PhoneInput name="phone" required className="w-full border-2 border-black p-2" placeholder="555-0100" />
                         </div>
 
                         <div>

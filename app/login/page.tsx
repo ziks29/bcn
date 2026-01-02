@@ -5,6 +5,7 @@ import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { signup } from "../signup/actions";
+import { formatPhoneInput } from "@/lib/utils";
 
 function LoginForm() {
     const router = useRouter();
@@ -155,7 +156,7 @@ function LoginForm() {
                             <input
                                 type="tel"
                                 value={phoneNumber}
-                                onChange={(e) => setPhoneNumber(e.target.value)}
+                                onChange={(e) => setPhoneNumber(formatPhoneInput(e.target.value))}
                                 className="w-full bg-white border-2 border-black p-2 font-mono focus:outline-none focus:bg-yellow-50 transition-colors"
                                 placeholder="555-5555"
                             />

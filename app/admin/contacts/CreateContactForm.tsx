@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { createContact } from "./actions";
 import { toast } from "sonner";
-import { formatPhone } from "@/lib/utils";
+import { formatPhone, formatPhoneInput } from "@/lib/utils";
 
 type UserOption = {
     id: string;
@@ -85,7 +85,7 @@ export default function CreateContactForm({ users }: { users: UserOption[] }) {
                         <input
                             name="phone"
                             value={phone}
-                            onChange={(e) => setPhone(e.target.value)}
+                            onChange={(e) => setPhone(formatPhoneInput(e.target.value))}
                             required
                             disabled={isPending}
                             className="w-full border-2 border-black p-2 disabled:opacity-50"

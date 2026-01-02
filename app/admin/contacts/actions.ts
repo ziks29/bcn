@@ -17,7 +17,11 @@ export async function createContact(formData: FormData) {
     const phoneInput = formData.get("phone") as string;
     const order = parseInt(formData.get("order") as string) || 0;
 
-    const phone = cleanPhone(phoneInput) || phoneInput; // Fallback to raw if undefined/empty, though cleanPhone handles it
+    const phone = cleanPhone(phoneInput);
+
+    if (!phone) {
+        return { success: false, message: "Некорректный номер (нужно 7 цифр)" };
+    }
 
     try {
         await prisma.contact.create({
@@ -44,7 +48,11 @@ export async function updateContact(id: string, formData: FormData) {
     const phoneInput = formData.get("phone") as string;
     const order = parseInt(formData.get("order") as string) || 0;
 
-    const phone = cleanPhone(phoneInput) || phoneInput;
+    const phone = cleanPhone(phoneInput);
+
+    if (!phone) {
+        return { success: false, message: "Некорректный номер (нужно 7 цифр)" };
+    }
 
     try {
         await prisma.contact.update({

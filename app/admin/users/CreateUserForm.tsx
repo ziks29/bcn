@@ -3,6 +3,7 @@
 import { createUser } from "./actions";
 import { toast } from "sonner";
 import { useRef } from "react";
+import PhoneInput from "@/app/components/PhoneInput";
 
 export default function CreateUserForm() {
     const formRef = useRef<HTMLFormElement>(null);
@@ -29,7 +30,7 @@ export default function CreateUserForm() {
             </div>
             <div>
                 <label className="block text-xs font-bold uppercase tracking-widest mb-1">Номер телефона</label>
-                <input name="phoneNumber" placeholder="555-5555" className="w-full border-2 border-black p-2" />
+                <PhoneInput name="phoneNumber" placeholder="555-5555" className="w-full border-2 border-black p-2" />
             </div>
             <div>
                 <label className="block text-xs font-bold uppercase tracking-widest mb-1">Роль</label>

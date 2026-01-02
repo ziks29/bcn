@@ -4,6 +4,7 @@ import Link from "next/link";
 import { updatePassword, updateProfileInfo } from "./actions";
 import { ProfileForm } from "./ProfileForm";
 import { formatPhone } from "@/lib/utils";
+import PhoneInput from "@/app/components/PhoneInput";
 
 export default async function ProfilePage() {
     const session = await auth();
@@ -72,7 +73,7 @@ export default async function ProfilePage() {
 
                             <div>
                                 <label className="block text-xs font-bold uppercase tracking-widest mb-1">Номер телефона</label>
-                                <input
+                                <PhoneInput
                                     name="phoneNumber"
                                     defaultValue={formatPhone(user?.phoneNumber) || ""}
                                     placeholder="555-5555"

@@ -5,6 +5,7 @@ import { updateAd } from "../../../actions";
 import { prisma } from "@/lib/prisma";
 import { AdForm } from "../../AdForm";
 import ImageUpload from "@/components/ImageUpload";
+import PhoneInput from "@/app/components/PhoneInput";
 
 export default async function EditAdPage(props: { params: Promise<{ id: string }> }) {
     const params = await props.params;
@@ -72,7 +73,7 @@ export default async function EditAdPage(props: { params: Promise<{ id: string }
 
                         <div>
                             <label className="block text-xs font-bold uppercase tracking-widest mb-1">Телефон</label>
-                            <input
+                            <PhoneInput
                                 name="phone"
                                 required
                                 defaultValue={ad.phone}

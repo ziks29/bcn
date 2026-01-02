@@ -20,6 +20,10 @@ export async function updateProfileInfo(formData: FormData) {
 
         const phoneNumber = cleanPhone(phoneNumberInput);
 
+        if (phoneNumberInput && !phoneNumber) {
+            return { success: false, message: "Номер телефона должен содержать ровно 7 цифр" };
+        }
+
         if (!username || username.length < 3) {
             return { success: false, message: "Имя пользователя должно быть не менее 3 символов" };
         }
@@ -43,6 +47,25 @@ export async function updateProfileInfo(formData: FormData) {
                 bio: bio || null
             },
         });
+
+        // Sync phone with Contact if exists
+        if (displayName && phoneNumber) {
+            try {
+                // Find contact by name (assuming exact match with displayName)
+                const contact = await prisma.contact.findFirst({
+                    where: { name: displayName }
+                });
+
+                if (contact) {
+                    await prisma.contact.update({
+                        where: { id: contact.id },
+                        data: { phone: phoneNumber }
+                    });
+                }
+            } catch (err) {
+                console.error("Failed to sync contact phone", err);
+            }
+        }
 
         if (currentUser?.username !== username) {
             await signOut({ redirectTo: "/login?message=Username updated. Please log in again." });

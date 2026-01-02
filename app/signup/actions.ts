@@ -12,6 +12,10 @@ export async function signup(formData: FormData) {
 
     const phoneNumber = cleanPhone(phoneNumberInput)
 
+    if (phoneNumberInput && !phoneNumber) {
+        return { success: false, message: "Номер телефона должен содержать ровно 7 цифр" }
+    }
+
     // Validate
     if (!username || !password || !displayName) {
         return { success: false, message: "Все поля обязательны" }

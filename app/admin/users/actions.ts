@@ -26,6 +26,10 @@ export async function createUser(formData: FormData) {
         const phoneNumberInput = formData.get("phoneNumber") as string;
         const phoneNumber = cleanPhone(phoneNumberInput);
 
+        if (phoneNumberInput && !phoneNumber) {
+            return { success: false, message: "Номер телефона должен содержать ровно 7 цифр" };
+        }
+
         if (!username || !password || !role) {
             return { success: false, message: "Заполните все обязательные поля" };
         }
