@@ -80,3 +80,29 @@ model Contact {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model Notification {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  customer  String
+  adText    String
+  quantity  Int
+  startDate String   // Stored as YYYY-MM-DD
+  endDate   String   // Stored as YYYY-MM-DD
+  startTime String
+  endTime   String
+  author    String
+
+  sentCount    Int       @default(0)
+  lastSentTime DateTime?
+
+  history   NotificationHistory[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+type NotificationHistory {
+  userName  String
+  timestamp DateTime
+  isPaid    Boolean  @default(false)
+}
