@@ -9,11 +9,17 @@ export async function signup(formData: FormData) {
     const password = formData.get("password") as string
     const displayName = formData.get("displayName") as string
     const phoneNumberInput = formData.get("phoneNumber") as string
+    const registrationNumber = formData.get("registrationNumber") as string
 
     const phoneNumber = cleanPhone(phoneNumberInput)
 
     if (phoneNumberInput && !phoneNumber) {
         return { success: false, message: "Номер телефона должен содержать ровно 7 цифр" }
+    }
+
+    // Reg number validation
+    if (registrationNumber && !/^\d{2}[A-Z]{2}$/.test(registrationNumber)) {
+        return { success: false, message: "Неверный формат Рег-номера" }
     }
 
     // Validate
@@ -47,6 +53,7 @@ export async function signup(formData: FormData) {
                 password: hashedPassword,
                 displayName,
                 phoneNumber,
+                registrationNumber: registrationNumber || null,
                 role: "AUTHOR",
                 approved: false
             }

@@ -16,12 +16,17 @@ export async function updateProfileInfo(formData: FormData) {
         const username = formData.get("username") as string;
         const displayName = formData.get("displayName") as string;
         const phoneNumberInput = formData.get("phoneNumber") as string;
+        const registrationNumber = formData.get("registrationNumber") as string;
         const bio = formData.get("bio") as string;
 
         const phoneNumber = cleanPhone(phoneNumberInput);
 
         if (phoneNumberInput && !phoneNumber) {
             return { success: false, message: "Номер телефона должен содержать ровно 7 цифр" };
+        }
+
+        if (registrationNumber && !/^\d{2}[A-Z]{2}$/.test(registrationNumber)) {
+            return { success: false, message: "Неверный формат Рег-номера (00AA)" };
         }
 
         if (!username || username.length < 3) {
@@ -44,6 +49,7 @@ export async function updateProfileInfo(formData: FormData) {
                 username,
                 displayName: displayName || null,
                 phoneNumber: phoneNumber || null,
+                registrationNumber: registrationNumber || null,
                 bio: bio || null
             },
         });

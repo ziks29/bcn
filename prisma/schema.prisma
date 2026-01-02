@@ -13,6 +13,7 @@ model User {
   username  String   @unique
   phoneNumber String?
   displayName String?
+  registrationNumber String?
   bio       String?
   password  String
   role      String   @default("AUTHOR")

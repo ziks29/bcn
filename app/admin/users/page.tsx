@@ -60,6 +60,9 @@ export default async function UsersPage() {
                                 {user.phoneNumber && (
                                     <p className="text-sm text-zinc-500 font-mono">Tel: {formatPhone(user.phoneNumber)}</p>
                                 )}
+                                {user.registrationNumber && (
+                                    <p className="text-sm text-zinc-500 font-mono">ID: <span className="text-black font-bold">{user.registrationNumber}</span></p>
+                                )}
                             </div>
 
                             <div className="flex items-center gap-2 w-full md:w-auto flex-wrap">

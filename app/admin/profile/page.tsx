@@ -82,6 +82,19 @@ export default async function ProfilePage() {
                             </div>
 
                             <div>
+                                <label className="block text-xs font-bold uppercase tracking-widest mb-1">Рег-номер (ID Карты)</label>
+                                <input
+                                    name="registrationNumber"
+                                    defaultValue={user?.registrationNumber || ""}
+                                    placeholder="00JI"
+                                    maxLength={4}
+                                    pattern="\d{2}[A-Z]{2}"
+                                    className="w-full border-2 border-black p-2 mb-4 font-mono uppercase"
+                                />
+                                <p className="text-[10px] text-zinc-500 -mt-3 mb-4">Формат: 2 цифры + 2 латинские буквы</p>
+                            </div>
+
+                            <div>
                                 <label className="block text-xs font-bold uppercase tracking-widest mb-1">Био (Об авторе)</label>
                                 <textarea
                                     name="bio"

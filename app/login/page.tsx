@@ -15,6 +15,7 @@ function LoginForm() {
     const [password, setPassword] = useState("");
     const [displayName, setDisplayName] = useState("");
     const [phoneNumber, setPhoneNumber] = useState("");
+    const [registrationNumber, setRegistrationNumber] = useState("");
     const [mode, setMode] = useState<"login" | "signup">("login");
     const [error, setError] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
@@ -61,11 +62,19 @@ function LoginForm() {
                 return;
             }
 
+            // Registration Number Validation (Optional but strict format if present)
+            if (registrationNumber && !/^\d{2}[A-Z]{2}$/.test(registrationNumber)) {
+                setError("Рег-номер должен быть в формате: 2 цифры и 2 буквы (напр. 00JI)");
+                setLoading(false);
+                return;
+            }
+
             const formData = new FormData();
             formData.append("username", username);
             formData.append("password", password);
             formData.append("displayName", displayName);
             formData.append("phoneNumber", phoneNumber);
+            if (registrationNumber) formData.append("registrationNumber", registrationNumber);
 
             const result = await signup(formData);
 
@@ -75,6 +84,7 @@ function LoginForm() {
                 setPassword("");
                 setDisplayName("");
                 setPhoneNumber("");
+                setRegistrationNumber("");
                 setMode("login");
             } else {
                 setError(result.message);
@@ -176,6 +186,21 @@ function LoginForm() {
                                 className="w-full bg-white border-2 border-black p-2 font-mono focus:outline-none focus:bg-yellow-50 transition-colors"
                                 placeholder="555-5555"
                             />
+                        </div>
+                    )}
+
+                    {mode === "signup" && (
+                        <div>
+                            <label className="block text-xs font-bold uppercase tracking-widest mb-1">Рег-номер (ID Карты) <span className="text-zinc-500 font-normal normal-case">(Необязательно)</span></label>
+                            <input
+                                type="text"
+                                value={registrationNumber}
+                                onChange={(e) => setRegistrationNumber(e.target.value.toUpperCase())}
+                                maxLength={4}
+                                className="w-full bg-white border-2 border-black p-2 font-mono focus:outline-none focus:bg-yellow-50 transition-colors uppercase placeholder:normal-case"
+                                placeholder="Напр. 00JI"
+                            />
+                            <p className="text-[10px] text-zinc-500 mt-1">Формат: 2 цифры + 2 латинские буквы</p>
                         </div>
                     )}
 
