@@ -45,6 +45,22 @@ function LoginForm() {
             }
         } else {
             // Signup mode
+
+            // Validation
+            if (/\s/.test(username)) {
+                setError("Имя пользователя должно быть одним словом");
+                setLoading(false);
+                return;
+            }
+
+            // Display Name: two words in English
+            const displayNameRegex = /^[A-Za-z]+\s[A-Za-z]+$/;
+            if (!displayNameRegex.test(displayName.trim())) {
+                setError("Отображаемое имя должно состоять из двух слов на английском языке");
+                setLoading(false);
+                return;
+            }
+
             const formData = new FormData();
             formData.append("username", username);
             formData.append("password", password);
@@ -138,14 +154,14 @@ function LoginForm() {
 
                     {mode === "signup" && (
                         <div>
-                            <label className="block text-xs font-bold uppercase tracking-widest mb-1">Отображаемое имя</label>
+                            <label className="block text-xs font-bold uppercase tracking-widest mb-1">Отображаемое имя (как в игре)</label>
                             <input
                                 type="text"
                                 value={displayName}
                                 onChange={(e) => setDisplayName(e.target.value)}
                                 className="w-full bg-white border-2 border-black p-2 font-mono focus:outline-none focus:bg-yellow-50 transition-colors"
                                 required
-                                placeholder="Как вас называть"
+                                placeholder="Trevor Philips"
                             />
                         </div>
                     )}

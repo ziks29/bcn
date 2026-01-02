@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Copy, Send, Pencil, Trash2, Clock, Check, DollarSign } from "lucide-react"
+import { Copy, Send, Pencil, Trash2, Clock, Check, DollarSign, Archive, ArchiveRestore, ChevronDown, ChevronUp } from "lucide-react"
 import { toast } from "sonner"
 import {
     createNotification,
@@ -10,7 +10,8 @@ import {
     deleteNotification as deleteNotificationAction,
     processSendNotification,
     toggleNotificationPayout as togglePayoutAction,
-    payAllEmployee
+    payAllEmployee,
+    toggleArchiveNotification
 } from "@/app/actions/notifications"
 
 interface SendGeneric {
@@ -33,6 +34,14 @@ interface Notification {
     endTime: string
     author: string
     isNew?: boolean
+    isArchived?: boolean
+}
+
+function getSentToday(history: SendGeneric[]) {
+    if (!history) return 0
+    const now = new Date()
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
+    return history.filter(h => new Date(h.timestamp).getTime() >= startOfDay).length
 }
 
 function TimeSince({ date }: { date?: string | null }) {
@@ -97,6 +106,7 @@ export default function NotificationsClient({
         isOpen: false,
         employeeName: null
     })
+    const [isArchiveOpen, setIsArchiveOpen] = useState(false)
 
     // Sync state with prop updates (from server revalidation)
     useEffect(() => {
@@ -142,7 +152,6 @@ export default function NotificationsClient({
             endDate: currentNotification.endDate || new Date().toISOString().split('T')[0],
             startTime: currentNotification.startTime || "12:00",
             endTime: currentNotification.endTime || "13:00",
-            author: userName
         }
 
         if (currentNotification.id) {
@@ -157,7 +166,7 @@ export default function NotificationsClient({
             }
         } else {
             // Create
-            const res = await createNotification(payload)
+            const res = await createNotification({ ...payload, author: userName })
             if (res.success) {
                 toast.success("Рассылка создана")
                 setIsEditing(false)
@@ -234,6 +243,15 @@ export default function NotificationsClient({
         setPayoutConfirmModal({ isOpen: false, employeeName: null })
     }
 
+    const toggleArchive = async (id: string) => {
+        const res = await toggleArchiveNotification(id)
+        if (res.success) {
+            toast.success("Статус архивации изменен")
+        } else {
+            toast.error("Ошибка изменения статуса")
+        }
+    }
+
     // Helper to get the most recent send time from all notifications
     const getLastGlobalSendTime = () => {
         let maxTime = 0
@@ -269,13 +287,13 @@ export default function NotificationsClient({
         return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
     }
 
-    const getOptimalPerDay = (quantity: number, startDate: string, endDate: string) => {
+    const getTotalCampaignLimit = (quantity: number, startDate: string, endDate: string) => {
         if (!startDate || !endDate) return quantity
         const start = new Date(startDate)
         const end = new Date(endDate)
         const diffTime = Math.abs(end.getTime() - start.getTime())
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
-        return (quantity / diffDays).toFixed(1)
+        return quantity * diffDays
     }
 
     return (
@@ -448,7 +466,16 @@ export default function NotificationsClient({
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-xs font-bold uppercase tracking-widest mb-1">Дата начала</label>
+                                        <div className="flex justify-between items-center mb-1">
+                                            <label className="block text-xs font-bold uppercase tracking-widest">Дата начала</label>
+                                            <button
+                                                type="button"
+                                                onClick={() => setCurrentNotification({ ...currentNotification, startDate: new Date().toISOString().split('T')[0] })}
+                                                className="text-[10px] font-bold uppercase tracking-wider text-pink-600 hover:text-pink-800"
+                                            >
+                                                Сегодня
+                                            </button>
+                                        </div>
                                         <input
                                             type="date"
                                             value={currentNotification.startDate || ""}
@@ -458,7 +485,16 @@ export default function NotificationsClient({
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-bold uppercase tracking-widest mb-1">Дата окончания</label>
+                                        <div className="flex justify-between items-center mb-1">
+                                            <label className="block text-xs font-bold uppercase tracking-widest">Дата окончания</label>
+                                            <button
+                                                type="button"
+                                                onClick={() => setCurrentNotification({ ...currentNotification, endDate: new Date().toISOString().split('T')[0] })}
+                                                className="text-[10px] font-bold uppercase tracking-wider text-pink-600 hover:text-pink-800"
+                                            >
+                                                Сегодня
+                                            </button>
+                                        </div>
                                         <input
                                             type="date"
                                             value={currentNotification.endDate || ""}
@@ -493,7 +529,7 @@ export default function NotificationsClient({
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold uppercase tracking-widest mb-1">Количество</label>
+                                    <label className="block text-xs font-bold uppercase tracking-widest mb-1">Всего в день</label>
                                     <input
                                         type="number"
                                         min="1"
@@ -537,10 +573,10 @@ export default function NotificationsClient({
 
                 {/* List */}
                 <div className="grid gap-4">
-                    {notifications.length === 0 ? (
+                    {notifications.filter(n => !n.isArchived).length === 0 ? (
                         <p className="text-zinc-500 italic text-center py-8">Нет активных рассылок.</p>
                     ) : (
-                        notifications.map(note => (
+                        notifications.filter(n => !n.isArchived).map(note => (
                             <div key={note.id} className="bg-white border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[-2px] hover:translate-x-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all flex flex-col">
                                 <div className="flex flex-col flex-1">
                                     {/* Header: Compact */}
@@ -581,17 +617,18 @@ export default function NotificationsClient({
                                         <div className="flex flex-col gap-3">
                                             <div className="bg-zinc-100 p-2 rounded-sm border border-zinc-200">
                                                 <div className="flex items-center justify-between mb-1">
-                                                    <div className="text-[10px] uppercase font-bold text-zinc-500">Отправлено</div>
+                                                    <div className="text-[10px] uppercase font-bold text-zinc-500">Сегодня / Лимит</div>
                                                     <div className="flex items-baseline gap-1">
-                                                        <span className={`text-xl font-black ${(note.sentCount || 0) >= note.quantity ? 'text-green-600' : 'text-black'}`}>
-                                                            {note.sentCount || 0}
+                                                        <span className={`text-xl font-black ${getSentToday(note.history || []) >= note.quantity ? 'text-green-600' : 'text-black'}`}>
+                                                            {getSentToday(note.history || [])}
                                                         </span>
                                                         <span className="text-xs font-bold text-zinc-400">/</span>
                                                         <span className="text-xs font-bold text-zinc-400">{note.quantity}</span>
+
                                                     </div>
                                                 </div>
                                                 <div className="text-[10px] font-bold text-zinc-400 text-right">
-                                                    ~{getOptimalPerDay(note.quantity, note.startDate, note.endDate)} / день
+                                                    Всего отправлено: {note.sentCount || 0} / {getTotalCampaignLimit(note.quantity, note.startDate, note.endDate)}
                                                 </div>
                                             </div>
 
@@ -653,7 +690,19 @@ export default function NotificationsClient({
                                             <Pencil size={16} />
                                         </button>
                                         {/* Delete Button - Only Admin/Chief or Author */}
+                                        {/* Archive Button for Author/Admin */}
                                         {(['ADMIN', 'CHIEF_EDITOR'].includes(userRole) || note.author === userName) && (
+                                            <button
+                                                onClick={() => toggleArchive(note.id)}
+                                                className="p-2 hover:bg-zinc-100 text-zinc-500 hover:text-black transition-colors rounded-md"
+                                                title={note.isArchived ? "Разархивировать" : "В архив"}
+                                            >
+                                                {note.isArchived ? <ArchiveRestore size={16} /> : <Archive size={16} />}
+                                            </button>
+                                        )}
+
+                                        {/* Delete Button - Only Admin */}
+                                        {['ADMIN', 'CHIEF_EDITOR'].includes(userRole) && (
                                             <button
                                                 onClick={() => deleteNotification(note.id)}
                                                 className="p-2 hover:bg-red-50 text-zinc-400 hover:text-red-500 transition-colors rounded-md"
@@ -666,8 +715,8 @@ export default function NotificationsClient({
 
                                     <button
                                         onClick={() => handleSendClick(note.id)}
-                                        disabled={(note.sentCount || 0) >= note.quantity}
-                                        className={`flex items-center gap-2 px-4 py-2 font-bold uppercase rounded text-xs tracking-wider transition-all ${(note.sentCount || 0) >= note.quantity
+                                        disabled={getSentToday(note.history || []) >= note.quantity}
+                                        className={`flex items-center gap-2 px-4 py-2 font-bold uppercase rounded text-xs tracking-wider transition-all ${getSentToday(note.history || []) >= note.quantity
                                             ? 'bg-zinc-100 text-zinc-400 cursor-not-allowed'
                                             : 'bg-black text-white hover:bg-zinc-800 shadow-md active:translate-y-[1px]'
                                             }`}
@@ -680,6 +729,51 @@ export default function NotificationsClient({
                         ))
                     )}
                 </div>
+
+                {/* Archive Section */}
+                {notifications.some(n => n.isArchived) && (
+                    <div className="mt-8 border-t-2 border-dashed border-zinc-300 pt-8">
+                        <button
+                            onClick={() => setIsArchiveOpen(!isArchiveOpen)}
+                            className="flex items-center gap-2 text-zinc-500 font-bold uppercase tracking-widest hover:text-black transition-colors w-full"
+                        >
+                            {isArchiveOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                            Архив ({notifications.filter(n => n.isArchived).length})
+                        </button>
+
+                        {isArchiveOpen && (
+                            <div className="grid gap-4 mt-6 opacity-60">
+                                {notifications.filter(n => n.isArchived).map(note => (
+                                    <div key={note.id} className="bg-zinc-50 border-2 border-zinc-300 p-4 flex flex-col pointer-events-none grayscale-[0.5] relative">
+                                        <div className="absolute top-2 right-2 pointer-events-auto z-10">
+                                            <button
+                                                onClick={() => toggleArchive(note.id)}
+                                                className="p-2 hover:bg-white text-zinc-500 hover:text-black transition-colors rounded-md border border-transparent hover:border-black"
+                                                title="Разархивировать"
+                                            >
+                                                <ArchiveRestore size={16} />
+                                            </button>
+                                        </div>
+                                        {/* Simplified View for Archived */}
+                                        <div className="flex flex-col gap-2">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <span className="bg-zinc-200 text-zinc-600 px-2 py-0.5 text-xs font-bold uppercase">
+                                                    {note.customer}
+                                                </span>
+                                                <span className="text-xs text-zinc-400 flex-1 truncate">
+                                                    {note.adText}
+                                                </span>
+                                            </div>
+                                            <div className="text-xs text-zinc-400 font-mono">
+                                                Отправлено: {note.sentCount} / {getTotalCampaignLimit(note.quantity, note.startDate, note.endDate)}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     )

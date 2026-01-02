@@ -52,9 +52,12 @@ export async function updateNotification(id: string, data: Partial<{
     endTime: string
 }>) {
     try {
+        // Ensure author is not updated
+        const { author, ...updateData } = data as any
+
         await prisma.notification.update({
             where: { id },
-            data
+            data: updateData
         })
         revalidatePath('/admin/notifications')
         return { success: true }
@@ -86,10 +89,9 @@ export async function deleteNotification(id: string) {
         const userName = session.user.name
 
         const isAdminOrChief = ['ADMIN', 'CHIEF_EDITOR'].includes(userRole)
-        const isAuthor = notification.author === userName
 
-        if (!isAdminOrChief && !isAuthor) {
-            return { success: false, error: "Forbidden: You can only delete your own notifications" }
+        if (!isAdminOrChief) {
+            return { success: false, error: "Forbidden: Only admins can delete" }
         }
 
         await prisma.notification.delete({
@@ -107,17 +109,38 @@ export async function processSendNotification(id: string, userName: string) {
         const notification = await prisma.notification.findUnique({ where: { id } })
         if (!notification) return { success: false, error: "Not found" }
 
-        if (notification.sentCount >= notification.quantity) {
-            return { success: false, error: "Limit reached" }
+        const now = new Date()
+        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+
+        const sentToday = notification.history.filter((h: any) => {
+            const hDate = new Date(h.timestamp)
+            return hDate >= startOfDay
+        }).length
+
+        if (sentToday >= notification.quantity) {
+            return { success: false, error: "Daily limit reached" }
         }
 
-        const now = new Date()
+
+
+        // Check if we reached the total campaign limit to auto-archive
+        // Calculate limit
+        const startDate = new Date(notification.startDate)
+        const endDate = new Date(notification.endDate)
+        const diffTime = Math.abs(endDate.getTime() - startDate.getTime())
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
+        const totalLimit = notification.quantity * diffDays
+
+        // New count is current sentCount + 1
+        const newSentCount = notification.sentCount + 1
+        const shouldArchive = newSentCount >= totalLimit
 
         await prisma.notification.update({
             where: { id },
             data: {
                 sentCount: { increment: 1 },
                 lastSentTime: now,
+                isArchived: shouldArchive ? true : undefined,
                 history: {
                     push: {
                         userName,
@@ -200,5 +223,21 @@ export async function payAllEmployee(userName: string) {
     } catch (error) {
         console.error("Pay all error:", error)
         return { success: false, error: "Failed to pay all" }
+    }
+}
+
+export async function toggleArchiveNotification(id: string) {
+    try {
+        const notification = await prisma.notification.findUnique({ where: { id } })
+        if (!notification) return { success: false, error: "Not found" }
+
+        await prisma.notification.update({
+            where: { id },
+            data: { isArchived: !notification.isArchived }
+        })
+        revalidatePath('/admin/notifications')
+        return { success: true }
+    } catch (error) {
+        return { success: false, error: "Failed to toggle archive" }
     }
 }
