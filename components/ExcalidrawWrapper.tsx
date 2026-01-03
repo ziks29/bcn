@@ -182,26 +182,6 @@ const ExcalidrawWrapper = () => {
 
     return (
         <div style={{ height: "100vh", width: "100vw", position: "fixed", top: 0, left: 0, overflow: "hidden" }}>
-            {/* Floating Action Buttons */}
-            <div className="fixed top-16 right-4 z-[1000] flex flex-col gap-2">
-                <button
-                    onClick={() => setShowSnapshotModal(true)}
-                    className="px-4 py-3 bg-white border-2 border-black rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all flex items-center gap-2 font-bold uppercase text-sm"
-                    title="Снимки"
-                >
-                    <History size={18} />
-                    Снимки
-                </button>
-                <button
-                    onClick={() => setShowGalleryModal(true)}
-                    className="px-4 py-3 bg-white border-2 border-black rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all flex items-center gap-2 font-bold uppercase text-sm"
-                    title="Галерея"
-                >
-                    <ImageIcon size={18} />
-                    Галерея
-                </button>
-            </div>
-
             <Excalidraw
                 langCode="ru-RU"
                 initialData={initialData}
@@ -217,6 +197,26 @@ const ExcalidrawWrapper = () => {
                         toggleTheme: true,
                     },
                 }}
+                renderTopRightUI={() => (
+                    <div className="flex gap-1">
+                        <button
+                            onClick={() => setShowSnapshotModal(true)}
+                            className="hover:bg-gray-100 active:bg-gray-200 p-2 rounded transition-colors"
+                            title="Снимки"
+                            style={{ border: 'none', background: 'transparent' }}
+                        >
+                            <History size={20} strokeWidth={1.5} />
+                        </button>
+                        <button
+                            onClick={() => setShowGalleryModal(true)}
+                            className="hover:bg-gray-100 active:bg-gray-200 p-2 rounded transition-colors"
+                            title="Галерея"
+                            style={{ border: 'none', background: 'transparent' }}
+                        >
+                            <ImageIcon size={20} strokeWidth={1.5} />
+                        </button>
+                    </div>
+                )}
             />
 
             {/* Modals */}
