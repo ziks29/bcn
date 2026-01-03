@@ -109,3 +109,23 @@ type NotificationHistory {
   timestamp DateTime
   isPaid    Boolean  @default(false)
 }
+
+model ExcalidrawBoard {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  elements  Json
+  appState  Json
+  files     Json     @default("{}")
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}
+
+model ExcalidrawSnapshot {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  boardId   String   @db.ObjectId
+  name      String
+  elements  Json
+  appState  Json
+  files     Json     @default("{}")
+  createdBy String
+  createdAt DateTime @default(now())
+}

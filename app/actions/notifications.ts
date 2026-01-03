@@ -135,6 +135,16 @@ export async function processSendNotification(id: string, userName: string) {
         const newSentCount = notification.sentCount + 1
         const shouldArchive = newSentCount >= totalLimit
 
+        const session = await auth()
+        if (!session?.user?.id) return { success: false, error: "Unauthorized" }
+
+        const user = await prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: { displayName: true, username: true }
+        })
+
+        const resolvedUserName = user?.displayName || user?.username || userName
+
         await prisma.notification.update({
             where: { id },
             data: {
@@ -143,7 +153,7 @@ export async function processSendNotification(id: string, userName: string) {
                 isArchived: shouldArchive ? true : undefined,
                 history: {
                     push: {
-                        userName,
+                        userName: resolvedUserName,
                         timestamp: now,
                         isPaid: false
                     }

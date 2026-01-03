@@ -21,6 +21,7 @@ export async function createUser(formData: FormData) {
         await checkAdmin();
 
         const username = formData.get("username") as string;
+        const displayName = formData.get("displayName") as string;
         const password = formData.get("password") as string;
         const role = formData.get("role") as string;
         const phoneNumberInput = formData.get("phoneNumber") as string;
@@ -46,7 +47,7 @@ export async function createUser(formData: FormData) {
                 username,
                 password: hashedPassword,
                 role,
-                displayName: username,
+                displayName: displayName || username,
                 phoneNumber,
                 approved: true  // Admin-created users are auto-approved
             }

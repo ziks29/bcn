@@ -178,6 +178,14 @@ export default async function AdminPage() {
                         </div>
                         <span className="text-green-800 text-xs font-bold uppercase tracking-widest">Перейти &rarr;</span>
                     </Link>
+
+                    <Link href="/admin/excalidraw" className="bg-white border-2 border-black p-5 md:p-6 active:translate-x-1 active:translate-y-1 md:hover:translate-x-1 md:hover:translate-y-1 transition-transform cursor-pointer group block min-h-[140px] flex flex-col justify-between">
+                        <div>
+                            <h3 className="font-newspaper text-xl sm:text-2xl font-bold mb-2 group-hover:underline decoration-orange-700">Доска (Excalidraw)</h3>
+                            <p className="text-zinc-600 text-sm sm:text-base mb-3 md:mb-4">Интерактивная доска для планирования и схем.</p>
+                        </div>
+                        <span className="text-orange-800 text-xs font-bold uppercase tracking-widest">Открыть &rarr;</span>
+                    </Link>
                 </div>
             </div>
         </div>

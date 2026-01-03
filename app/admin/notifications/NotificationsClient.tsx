@@ -76,7 +76,17 @@ function TimeSince({ date }: { date?: string | null }) {
 }
 
 function FormatTime({ date }: { date: string }) {
-    return new Date(date).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+    const d = new Date(date)
+    const now = new Date()
+    const isToday = d.getDate() === now.getDate() &&
+        d.getMonth() === now.getMonth() &&
+        d.getFullYear() === now.getFullYear()
+
+    const timeStr = d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+    if (isToday) return timeStr
+
+    const dateStr = d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit' })
+    return `${dateStr} ${timeStr}`
 }
 
 function formatDate(dateStr: string) {
@@ -744,7 +754,7 @@ export default function NotificationsClient({
                         {isArchiveOpen && (
                             <div className="grid gap-4 mt-6 opacity-60">
                                 {notifications.filter(n => n.isArchived).map(note => (
-                                    <div key={note.id} className="bg-zinc-50 border-2 border-zinc-300 p-4 flex flex-col pointer-events-none grayscale-[0.5] relative">
+                                    <div key={note.id} className="bg-zinc-50 border-2 border-zinc-300 p-4 flex flex-col pointer-events-none grayscale-[0.5] relative min-w-0 w-full">
                                         <div className="absolute top-2 right-2 pointer-events-auto z-10">
                                             <button
                                                 onClick={() => toggleArchive(note.id)}
@@ -755,12 +765,12 @@ export default function NotificationsClient({
                                             </button>
                                         </div>
                                         {/* Simplified View for Archived */}
-                                        <div className="flex flex-col gap-2">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <span className="bg-zinc-200 text-zinc-600 px-2 py-0.5 text-xs font-bold uppercase">
+                                        <div className="flex flex-col gap-2 pr-8">
+                                            <div className="flex items-center gap-2 mb-2 min-w-0">
+                                                <span className="bg-zinc-200 text-zinc-600 px-2 py-0.5 text-xs font-bold uppercase shrink-0">
                                                     {note.customer}
                                                 </span>
-                                                <span className="text-xs text-zinc-400 flex-1 truncate">
+                                                <span className="text-xs text-zinc-400 flex-1 truncate min-w-0">
                                                     {note.adText}
                                                 </span>
                                             </div>
