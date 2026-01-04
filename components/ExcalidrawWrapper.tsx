@@ -33,6 +33,7 @@ const ExcalidrawWrapper = () => {
     const [showSnapshotModal, setShowSnapshotModal] = useState(false);
     const [showGalleryModal, setShowGalleryModal] = useState(false);
     const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const lastSavedElementsRef = useRef<string>("");
 
     // Load initial data from database on mount
     useEffect(() => {
@@ -49,23 +50,40 @@ const ExcalidrawWrapper = () => {
                     appState: appState,
                     files: board.files || {},
                 });
+
+                // Store initial elements hash
+                lastSavedElementsRef.current = JSON.stringify(board.elements || []);
             }
         }).catch((error) => {
             console.error("Failed to load Excalidraw board:", error);
         });
     }, []);
 
-    // Debounced save function - saves 2 seconds after last change
+    // Debounced save function - only saves when there are meaningful changes
     const handleChange = useCallback((elements: any, appState: any, files: any) => {
+        // Create a hash of current elements to compare
+        const currentElementsHash = JSON.stringify(elements || []);
+
+        // Check if elements actually changed (not just app state like cursor/zoom)
+        const hasMeaningfulChange = currentElementsHash !== lastSavedElementsRef.current;
+
+        if (!hasMeaningfulChange) {
+            // Skip save if only app state changed (cursor position, zoom, etc.)
+            return;
+        }
+
         if (saveTimeoutRef.current) {
             clearTimeout(saveTimeoutRef.current);
         }
 
         saveTimeoutRef.current = setTimeout(() => {
-            updateExcalidrawBoard(elements, appState, files).catch((error) => {
+            updateExcalidrawBoard(elements, appState, files).then(() => {
+                // Update the last saved state after successful save
+                lastSavedElementsRef.current = currentElementsHash;
+            }).catch((error) => {
                 console.error("Failed to save Excalidraw board:", error);
             });
-        }, 2000);
+        }, 3000); // Increased to 3 seconds for better stability
     }, []);
 
     // Handle snapshot load
