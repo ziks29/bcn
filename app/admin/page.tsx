@@ -156,6 +156,14 @@ export default async function AdminPage() {
                         </>
                     )}
 
+                    <Link href="/admin/business" className="bg-white border-2 border-black p-5 md:p-6 active:translate-x-1 active:translate-y-1 md:hover:translate-x-1 md:hover:translate-y-1 transition-transform cursor-pointer group block min-h-[140px] flex flex-col justify-between">
+                        <div>
+                            <h3 className="font-newspaper text-xl sm:text-2xl font-bold mb-2 group-hover:underline decoration-blue-700">Бизнес</h3>
+                            <p className="text-zinc-600 text-sm sm:text-base mb-3 md:mb-4">Управление заказами, платежами и финансами.</p>
+                        </div>
+                        <span className="text-blue-800 text-xs font-bold uppercase tracking-widest">Перейти &rarr;</span>
+                    </Link>
+
                     <Link href="/admin/notifications" className="bg-white border-2 border-black p-5 md:p-6 active:translate-x-1 active:translate-y-1 md:hover:translate-x-1 md:hover:translate-y-1 transition-transform cursor-pointer group block min-h-[140px] flex flex-col justify-between">
                         <div>
                             <h3 className="font-newspaper text-xl sm:text-2xl font-bold mb-2 group-hover:underline decoration-pink-700">Рассылки</h3>

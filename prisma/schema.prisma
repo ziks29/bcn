@@ -129,3 +129,49 @@ model ExcalidrawSnapshot {
   createdBy String
   createdAt DateTime @default(now())
 }
+
+model Order {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  client      String
+  description String
+  packageType String
+  quantity    Int
+  startDate   String   // Stored as YYYY-MM-DD
+  endDate     String   // Stored as YYYY-MM-DD
+  employee    String
+  status      String   @default("PENDING") // PENDING, ACTIVE, COMPLETED, CANCELLED
+  totalPrice  Float
+  notes       String?
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  payments    Payment[]
+}
+
+model Payment {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  orderId       String   @db.ObjectId
+  amount        Float
+  paymentDate   DateTime
+  paymentMethod String   // CASH, CARD, BANK_TRANSFER
+  receivedBy    String
+  receiptNumber String?
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Transaction {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  type        String   // INCOME or EXPENSE
+  amount      Float
+  description String
+  category    String?  // Optional: Salary, Bills, Other Income, etc.
+  date        DateTime
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
