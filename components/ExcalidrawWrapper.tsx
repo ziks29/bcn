@@ -29,11 +29,12 @@ const Excalidraw = dynamic(
 
 const ExcalidrawWrapper = () => {
     const [initialData, setInitialData] = useState<any>(null);
+    const [isLoading, setIsLoading] = useState(true);
     const [excalidrawAPI, setExcalidrawAPI] = useState<any>(null);
     const [showSnapshotModal, setShowSnapshotModal] = useState(false);
     const [showGalleryModal, setShowGalleryModal] = useState(false);
     const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-    const lastSavedElementsRef = useRef<string>("");
+    const lastSavedElementsRef = useRef<string>("[]");
 
     // Load initial data from database on mount
     useEffect(() => {
@@ -45,17 +46,35 @@ const ExcalidrawWrapper = () => {
                     appState.collaborators = new Map();
                 }
 
-                setInitialData({
+                const loadedData = {
                     elements: board.elements,
                     appState: appState,
                     files: board.files || {},
-                });
+                };
 
+                setInitialData(loadedData);
                 // Store initial elements hash
                 lastSavedElementsRef.current = JSON.stringify(board.elements || []);
+            } else {
+                // No existing board, start with empty
+                setInitialData({
+                    elements: [],
+                    appState: {},
+                    files: {},
+                });
+                lastSavedElementsRef.current = "[]";
             }
         }).catch((error) => {
             console.error("Failed to load Excalidraw board:", error);
+            // On error, still allow rendering with empty board
+            setInitialData({
+                elements: [],
+                appState: {},
+                files: {},
+            });
+            lastSavedElementsRef.current = "[]";
+        }).finally(() => {
+            setIsLoading(false);
         });
     }, []);
 
@@ -80,6 +99,7 @@ const ExcalidrawWrapper = () => {
             updateExcalidrawBoard(elements, appState, files).then(() => {
                 // Update the last saved state after successful save
                 lastSavedElementsRef.current = currentElementsHash;
+                console.log("✅ Board saved successfully");
             }).catch((error) => {
                 console.error("Failed to save Excalidraw board:", error);
             });
@@ -197,6 +217,18 @@ const ExcalidrawWrapper = () => {
             alert("Не удалось вставить изображение");
         }
     };
+
+    // Show loading state while fetching data
+    if (isLoading) {
+        return (
+            <div style={{ height: "100vh", width: "100vw", position: "fixed", top: 0, left: 0, overflow: "hidden" }} className="flex items-center justify-center bg-white border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+                <div className="text-center">
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-black mb-4"></div>
+                    <p className="font-headline uppercase tracking-tighter text-xl">Загрузка доски...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div style={{ height: "100vh", width: "100vw", position: "fixed", top: 0, left: 0, overflow: "hidden" }}>
