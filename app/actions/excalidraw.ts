@@ -73,6 +73,7 @@ export async function createSnapshot(name: string, elements: any, appState: any,
                 appState,
                 files: files || {},
                 createdBy: (session.user as any).username || "Unknown",
+                createdById: session.user?.id,
             },
         });
 
@@ -94,10 +95,24 @@ export async function getSnapshots() {
                 id: true,
                 name: true,
                 createdBy: true,
+                createdById: true,
                 createdAt: true,
             },
         });
-        return snapshots;
+
+        // Resolve names
+        const userIds = Array.from(new Set(snapshots.filter(s => s.createdById).map(s => s.createdById!)));
+        const users = await prisma.user.findMany({
+            where: { id: { in: userIds } },
+            select: { id: true, displayName: true, username: true }
+        });
+        const userMap = new Map(users.map(u => [u.id, u.displayName || u.username]));
+
+        return snapshots.map(s => ({
+            ...s,
+            createdBy: (s.createdById ? userMap.get(s.createdById) : s.createdBy) || "Unknown"
+        }));
+
     } catch (error) {
         console.error("Failed to fetch snapshots:", error);
         return [];
