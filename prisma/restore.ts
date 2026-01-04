@@ -26,7 +26,7 @@ async function restore() {
         process.exit(1)
     }
 
-    const { users, articles, ads, galleryItems, categories, contacts, notifications } = backup.data
+    const { users, articles, ads, galleryItems, categories, contacts, notifications, excalidrawBoards, excalidrawSnapshots } = backup.data
 
     console.log('Starting restore...')
 
@@ -113,6 +113,30 @@ async function restore() {
                 where: { id: notification.id },
                 update: { ...notification },
                 create: { ...notification },
+            })
+        }
+    }
+
+    // 8. Excalidraw Boards
+    if (excalidrawBoards?.length) {
+        console.log(`Restoring ${excalidrawBoards.length} Excalidraw boards...`)
+        for (const board of excalidrawBoards) {
+            await prisma.excalidrawBoard.upsert({
+                where: { id: board.id },
+                update: { ...board },
+                create: { ...board },
+            })
+        }
+    }
+
+    // 9. Excalidraw Snapshots
+    if (excalidrawSnapshots?.length) {
+        console.log(`Restoring ${excalidrawSnapshots.length} Excalidraw snapshots...`)
+        for (const snapshot of excalidrawSnapshots) {
+            await prisma.excalidrawSnapshot.upsert({
+                where: { id: snapshot.id },
+                update: { ...snapshot },
+                create: { ...snapshot },
             })
         }
     }

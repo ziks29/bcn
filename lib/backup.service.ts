@@ -8,7 +8,9 @@ export async function getBackupData() {
         galleryItems,
         categories,
         contacts,
-        notifications
+        notifications,
+        excalidrawBoards,
+        excalidrawSnapshots
     ] = await Promise.all([
         prisma.user.findMany(),
         prisma.article.findMany(),
@@ -16,7 +18,9 @@ export async function getBackupData() {
         prisma.galleryItem.findMany(),
         prisma.category.findMany(),
         prisma.contact.findMany(),
-        prisma.notification.findMany({ include: { history: true } })
+        prisma.notification.findMany({ include: { history: true } }),
+        prisma.excalidrawBoard.findMany(),
+        prisma.excalidrawSnapshot.findMany()
     ])
 
     return {
@@ -29,7 +33,9 @@ export async function getBackupData() {
             galleryItems,
             categories,
             contacts,
-            notifications
+            notifications,
+            excalidrawBoards,
+            excalidrawSnapshots
         }
     }
 }
