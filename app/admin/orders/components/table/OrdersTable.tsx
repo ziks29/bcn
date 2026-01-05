@@ -13,6 +13,7 @@ interface OrdersTableProps {
     onToggleExpand: (orderId: string) => void
     highlightedOrderId: string | null
     isAdmin: boolean
+    userName: string
     onEdit: (order: Order) => void
     onDelete: (orderId: string) => void
     onToggleIsPaid: (orderId: string, newValue: boolean) => Promise<void>
@@ -30,6 +31,7 @@ export default function OrdersTable({
     onToggleExpand,
     highlightedOrderId,
     isAdmin,
+    userName,
     onEdit,
     onDelete,
     onToggleIsPaid,
@@ -108,6 +110,7 @@ export default function OrdersTable({
                                             isExpanded={isExpanded}
                                             isHighlighted={highlightedOrderId === order.id}
                                             isAdmin={isAdmin}
+                                            userName={userName}
                                             onToggleExpand={onToggleExpand}
                                             onEdit={onEdit}
                                             onDelete={onDelete}

@@ -136,6 +136,32 @@ export async function deleteEmployeePayment(id: string) {
                     orderId: payment.orderId
                 }
             })
+
+            // 4. Revert Notification History status
+            // Find notifications that have history items with this employeePaymentId
+            const notifications = await tx.notification.findMany({
+                where: {
+                    history: {
+                        some: {
+                            employeePaymentId: id
+                        }
+                    }
+                }
+            })
+
+            for (const note of notifications) {
+                const updatedHistory = note.history.map((h: any) => {
+                    if (h.employeePaymentId === id) {
+                        return { ...h, isPaid: false, employeePaymentId: null }
+                    }
+                    return h
+                })
+
+                await tx.notification.update({
+                    where: { id: note.id },
+                    data: { history: updatedHistory }
+                })
+            }
         })
 
         revalidateTag("business", "max")

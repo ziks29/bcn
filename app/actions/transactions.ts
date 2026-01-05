@@ -18,6 +18,17 @@ export async function createTransaction(data: {
             return { success: false, error: "Unauthorized" }
         }
 
+        // Authorization: Only admin or chief can create manual transactions
+        const user = await prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: { role: true }
+        })
+
+        const isAdmin = ['ADMIN', 'CHIEF_EDITOR'].includes(user?.role || '')
+        if (!isAdmin) {
+            return { success: false, error: "Forbidden: Only admins can create transactions" }
+        }
+
         await prisma.transaction.create({
             data: {
                 ...data,
@@ -71,8 +82,19 @@ export async function updateTransaction(id: string, data: {
 export async function deleteTransaction(id: string) {
     try {
         const session = await auth()
-        if (!session) {
+        if (!session?.user?.id) {
             return { success: false, error: "Unauthorized" }
+        }
+
+        // Authorization: Only admin or chief can delete transactions
+        const user = await prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: { role: true }
+        })
+
+        const isAdmin = ['ADMIN', 'CHIEF_EDITOR'].includes(user?.role || '')
+        if (!isAdmin) {
+            return { success: false, error: "Forbidden: Only admins can delete transactions" }
         }
 
         await prisma.transaction.delete({

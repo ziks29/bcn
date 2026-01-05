@@ -67,19 +67,61 @@ export async function createNotification(data: {
     startTime: string
     endTime: string
     author: string
+    price?: number
+    employeeRate?: number
 }) {
     try {
         const session = await auth()
         const authorId = session?.user?.id
 
+        let orderId = null
+
+        // Create Order if price is provided
+        if (data.price !== undefined && data.price !== null) {
+            const employeeUser = await prisma.user.findFirst({
+                where: {
+                    OR: [
+                        { displayName: data.author },
+                        { username: data.author }
+                    ]
+                },
+                select: { id: true }
+            })
+
+            const order = await prisma.order.create({
+                data: {
+                    client: data.customer,
+                    clientName: data.customer,
+                    description: `Рассылка: ${data.adText.substring(0, 50)}...`,
+                    service: "Рассылки",
+                    startDate: data.startDate,
+                    endDate: data.endDate,
+                    employee: data.author,
+                    employeeId: employeeUser?.id,
+                    totalPrice: data.price,
+                    createdBy: data.author,
+                    createdById: authorId,
+                    isPaid: false
+                }
+            })
+            orderId = order.id
+        }
+
+        // Destructure to avoid TS error with extra props
+        const { price, employeeRate, ...notificationData } = data
+
         await prisma.notification.create({
             data: {
-                ...data,
-                authorId: authorId, // Save ID
-                history: []
+                ...notificationData,
+                employeeRate: employeeRate !== undefined ? employeeRate : 42.5,
+                authorId: authorId,
+                history: [],
+                orderId: orderId
             }
         })
         revalidatePath('/admin/notifications')
+        revalidatePath('/admin/orders')
+        revalidatePath('/admin/business')
         return { success: true }
     } catch (error) {
         console.error("Create notification error:", error)
@@ -95,16 +137,32 @@ export async function updateNotification(id: string, data: Partial<{
     endDate: string
     startTime: string
     endTime: string
+    price?: number
+    employeeRate?: number
 }>) {
     try {
-        // Ensure author is not updated
-        const { author, ...updateData } = data as any
+        // Ensure author is not updated, destructure price and employeeRate
+        const { author, price, employeeRate, ...updateData } = data as any
+
+        const notification = await prisma.notification.findUnique({ where: { id } })
+
+        // If price explicitly provided and there is a linked order, update the order price
+        if (price !== undefined && notification?.orderId) {
+            await prisma.order.update({
+                where: { id: notification.orderId },
+                data: { totalPrice: price }
+            })
+        }
 
         await prisma.notification.update({
             where: { id },
-            data: updateData
+            data: {
+                ...updateData,
+                ...(employeeRate !== undefined ? { employeeRate } : {})
+            }
         })
         revalidatePath('/admin/notifications')
+        revalidatePath('/admin/orders')
         return { success: true }
     } catch (error) {
         console.error("Update notification error:", error)
@@ -121,7 +179,7 @@ export async function deleteNotification(id: string) {
 
         const notification = await prisma.notification.findUnique({
             where: { id },
-            select: { author: true, authorId: true }
+            select: { author: true, authorId: true, orderId: true }
         })
 
         if (!notification) {
@@ -140,10 +198,26 @@ export async function deleteNotification(id: string) {
             return { success: false, error: "Forbidden: Only admins or author can delete" }
         }
 
+        // If linked order exists, delete it too? 
+        // Logic: Notification is the source. If we delete notification, we should delete the order 
+        // to avoid "Ghost" orders.
+        if (notification.orderId) {
+            // Check if order has other payments/transactions which might block deletion is handled by deleteOrder logic
+            // But here we just delete order directly or via cascade?
+            // Safer to just delete the order.
+            try {
+                await prisma.order.delete({ where: { id: notification.orderId } })
+            } catch (e) {
+                console.error("Failed to delete linked order", e)
+            }
+        }
+
         await prisma.notification.delete({
             where: { id }
         })
         revalidatePath('/admin/notifications')
+        revalidatePath('/admin/orders')
+        revalidatePath('/admin/business')
         return { success: true }
     } catch (error) {
         return { success: false, error: "Failed to delete" }
@@ -216,6 +290,14 @@ export async function processSendNotification(id: string, userName: string) {
 }
 
 export async function toggleNotificationPayout(id: string, timestampStr: string) {
+    // This function is for individual item toggle. 
+    // It's harder to sync this one specific item to a transaction.
+    // For now we might disable it or just warn user. 
+    // Or we keep it visual only. 
+    // Let's implement full logic: if linked order exists, create/delete partial payment?
+    // It's complex. Let's keep existing visual behavior for legacy/individual toggle.
+    // Ideally user uses "Pay All".
+
     try {
         const notification = await prisma.notification.findUnique({ where: { id } })
         if (!notification) return { success: false, error: "Not found" }
@@ -246,25 +328,12 @@ export async function toggleNotificationPayout(id: string, timestampStr: string)
 
 export async function payAllEmployee(employeeName: string) {
     try {
-        // NOTE: This function still relies on employeeName for bulk payout. 
-        // Ideally checking by ID is better, but the UI triggers this by name group.
-        // We can keep it as is, or we'd need to change the UI to group by ID. 
-        // Given we resolved names in getNotifications, employeeName passed here should be the "current" name.
-        // But what if we have collision? 
-        // For now, let's keep it simple as the immediate request is about history tracking.
-        // But we should try to match against resolved names.
-
-        // Actually, to fully fix the issue, payAllEmployee should iterate and check current resolved names.
-
-        // Strategy: 
-        // 1. Get all notifications.
-        // 2. Resolve names for all history items (like in getNotifications).
-        // 3. Filter for items where resolvedName === employeeName.
-        // 4. Update them.
+        const session = await auth()
+        if (!session?.user?.id) return { success: false, error: "Unauthorized" }
 
         const notifications = await prisma.notification.findMany()
 
-        // We need the user map again... this is inefficient but safe.
+        // We need the user map again... 
         const userIds = new Set<string>()
         notifications.forEach(n => {
             n.history.forEach((h: any) => {
@@ -277,29 +346,183 @@ export async function payAllEmployee(employeeName: string) {
         })
         const userMap = new Map(users.map(u => [u.id, u.displayName || u.username]))
 
+        let totalPaidAmount = 0
+        const paymentsToCreate: any[] = []
+        const orderUpdates: any[] = []
+
+        // Iterate over all notifications to find unpaid items for this employee
         for (const note of notifications) {
-            let needsUpdate = false
+            let countForThisNote = 0
+
             const updatedHistory = note.history.map((h: any) => {
                 const resolvedName = h.userId ? userMap.get(h.userId) : h.userName
 
                 if (resolvedName === employeeName && !h.isPaid) {
-                    needsUpdate = true
+                    countForThisNote++
                     return { ...h, isPaid: true }
                 }
                 return h
             })
 
-            if (needsUpdate) {
-                await prisma.notification.update({
-                    where: { id: note.id },
-                    data: {
-                        history: updatedHistory
-                    }
-                })
+            if (countForThisNote > 0) {
+                // Use per-notification rate, fallback to global default 42.5
+                const rate = note.employeeRate ?? 42.5
+                const amount = countForThisNote * rate
+
+                totalPaidAmount += amount
+
+                // If linked Order exists, prepare EmployeePayment
+                if (note.orderId && amount > 0) {
+                    paymentsToCreate.push({
+                        notificationId: note.id, // Add ID so we can update the right note later
+                        orderId: note.orderId,
+                        amount: amount,
+                        processedById: session.user.id,
+                        noteAuthor: employeeName
+                    })
+                }
             }
         }
 
+        if (totalPaidAmount === 0 && paymentsToCreate.length === 0) {
+            return { success: true, message: "Nothing to pay" }
+        }
+
+        // Execute DB updates
+        // 1. Update "No Order" notifications directly (Handled after this block now)
+        // await prisma.$transaction(orderUpdates) // REMOVED
+
+        // 2. Create Employee Payments & Transactions for linked orders
+        // We do this separately because creating multiple payments in a transaction loop is complex 
+        // with the helpers
+
+        // Execute DB updates
+        // We need to create Employee Payments FIRST to get IDs, then update history
+
+        if (paymentsToCreate.length > 0) {
+            const adminUser = await prisma.user.findUnique({ where: { id: session.user.id } })
+            const adminName = adminUser?.displayName || adminUser?.username || "Admin"
+
+            for (const p of paymentsToCreate) {
+                await prisma.$transaction(async (tx) => {
+                    // 1. Create EmployeePayment
+                    const empPayment = await tx.employeePayment.create({
+                        data: {
+                            orderId: p.orderId,
+                            amount: p.amount,
+                            paymentDate: new Date(),
+                            paymentMethod: 'CASH', // Default
+                            processedBy: adminName,
+                            processedById: p.processedById,
+                            recipient: p.noteAuthor,
+                            notes: 'Выплата за рассылку (автоматически)'
+                        }
+                    })
+
+                    // 2. Update Order Paid Amount
+                    await tx.order.update({
+                        where: { id: p.orderId },
+                        data: {
+                            employeePaidAmount: { increment: p.amount }
+                        }
+                    })
+
+                    // 3. Create Expense Transaction
+                    await tx.transaction.create({
+                        data: {
+                            type: 'EXPENSE',
+                            amount: p.amount,
+                            category: 'Зарплата',
+                            date: new Date(),
+                            description: `Выплата за рассылку: ${p.noteAuthor}`,
+                            createdBy: adminName,
+                            createdById: p.processedById,
+                            employeePaymentId: empPayment.id
+                        }
+                    })
+
+                    // 4. Update Notification History with the Payment ID
+                    // We need to find the specific notification again or pass ID
+                    // Note: p was constructed from notifications loop. We need to know WHICH notification this payment belongs to.
+                    // The logic above grouped by... wait, the logic above iterated notifications.
+                    // If one order has multiple notifications... we might have multiple payments for same order?
+                    // The loop above: for (const note of notifications) -> paymentsToCreate.push(...)
+                    // So we have a 1-to-1 mapping between a "payment chunk" and a notification in this implementation.
+                    // We should pass notificationId in p.
+
+                    if (p.notificationId) {
+                        const note = notifications.find(n => n.id === p.notificationId)
+                        if (note) {
+                            const updatedHistory = note.history.map((h: any) => {
+                                const resolvedName = h.userId ? userMap.get(h.userId) : h.userName
+                                if (resolvedName === employeeName && !h.isPaid) {
+                                    return { ...h, isPaid: true, employeePaymentId: empPayment.id }
+                                }
+                                return h
+                            })
+
+                            await tx.notification.update({
+                                where: { id: p.notificationId },
+                                data: { history: updatedHistory }
+                            })
+                        }
+                    }
+                })
+            }
+        } else {
+            // If no order payments (e.g. only history updates with no price/order), we still need to update history?
+            // The logic above: if note.orderId && amount > 0 -> paymentsToCreate.push
+            // What if note has no orderId? Then we just mark as paid but no transaction?
+            // That seems to be the current logic.
+            // We should process "non-order" updates here.
+
+            // Let's modify the loop to handle both cases efficiently.
+            // But for now, adhering to the previous structure:
+            // 1. We pushed 'orderUpdates' for history updates. But we need to update them WITH IDs if possible.
+            // If no ID (no order), we just mark paid.
+            // If ID (order), we use the payment ID.
+
+            // Refactoring strategy:
+            // Separate "Order Linked" updates and "Free/NoOrder" updates.
+        }
+
+        // Handle "No Order" updates (where we just mark as paid without a financial transaction record? Or maybe we should create one?)
+        // Existing logic for 'orderUpdates' was blindly marking isPaid=true. 
+        // We should run 'orderUpdates' ONLY for those that were NOT handled in the payment loop.
+
+        // Actually, let's redefine the flow:
+        // iterate notifications:
+        // if (note.orderId) -> create payment -> use paymentId to update history
+        // else -> just update history isPaid=true
+
+        // So we need to process "free" updates separately.
+
+        const updatesWithoutOrder = notifications.filter(n => !n.orderId).map(note => {
+            let changed = false
+            const updatedHistory = note.history.map((h: any) => {
+                const resolvedName = h.userId ? userMap.get(h.userId) : h.userName
+                if (resolvedName === employeeName && !h.isPaid) {
+                    changed = true
+                    return { ...h, isPaid: true }
+                }
+                return h
+            })
+
+            if (changed) {
+                return prisma.notification.update({
+                    where: { id: note.id },
+                    data: { history: updatedHistory }
+                })
+            }
+            return null
+        }).filter(Boolean)
+
+        await prisma.$transaction(updatesWithoutOrder as any)
+
         revalidatePath('/admin/notifications')
+        revalidatePath('/admin/orders')
+        revalidatePath('/admin/finances')
+        revalidatePath('/admin/business')
         return { success: true }
     } catch (error) {
         console.error("Pay all error:", error)

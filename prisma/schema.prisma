@@ -115,6 +115,7 @@ model Notification {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   isArchived Boolean @default(false)
+  employeeRate Float @default(42.5) // Default payout per send for employee
   
   authorId  String?  @db.ObjectId
   authorUser User?   @relation(fields: [authorId], references: [id])
@@ -123,6 +124,10 @@ model Notification {
   @@index([isArchived])
   @@index([createdAt])
   @@index([authorId])
+  
+  // Link to Order
+  orderId   String?  @db.ObjectId
+  order     Order?   @relation(fields: [orderId], references: [id])
 }
 
 type NotificationHistory {
@@ -130,6 +135,7 @@ type NotificationHistory {
   userId    String?  @db.ObjectId
   timestamp DateTime
   isPaid    Boolean  @default(false)
+  employeePaymentId String? @db.ObjectId
 }
 
 model ExcalidrawBoard {
@@ -179,6 +185,7 @@ model Order {
   isPaid        Boolean  @default(false)
   payments      Payment[]
   employeePayments EmployeePayment[]
+  notifications Notification[]
   
   // Indexes for query performance
   @@index([createdAt])

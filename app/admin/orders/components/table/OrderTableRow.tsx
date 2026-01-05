@@ -8,6 +8,7 @@ interface OrderTableRowProps {
     isExpanded: boolean
     isHighlighted: boolean
     isAdmin: boolean
+    userName: string
     onToggleExpand: (orderId: string) => void
     onEdit: (order: Order) => void
     onDelete: (orderId: string) => void
@@ -20,16 +21,20 @@ export default function OrderTableRow({
     isExpanded,
     isHighlighted,
     isAdmin,
+    userName,
     onToggleExpand,
     onEdit,
     onDelete,
     getEmployeePaymentStatus
 }: OrderTableRowProps) {
+    // Check if current user can edit this order
+    const canEdit = isAdmin || order.createdBy === userName
+
     return (
         <tr
             id={`order-${order.id}`}
             className={`border-t-2 border-zinc-200 hover:bg-zinc-50 transition-colors ${isHighlighted ? 'bg-purple-100 ring-2 ring-purple-400' :
-                    index % 2 === 0 ? 'bg-white' : 'bg-zinc-50/50'
+                index % 2 === 0 ? 'bg-white' : 'bg-zinc-50/50'
                 }`}
         >
             <td className="p-3 text-sm">
@@ -66,13 +71,15 @@ export default function OrderTableRow({
                     >
                         {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                     </button>
-                    <button
-                        onClick={() => onEdit(order)}
-                        className="p-2 hover:bg-zinc-200 rounded transition-colors"
-                        title="Редактировать"
-                    >
-                        <Pencil size={16} />
-                    </button>
+                    {canEdit && (
+                        <button
+                            onClick={() => onEdit(order)}
+                            className="p-2 hover:bg-zinc-200 rounded transition-colors"
+                            title="Редактировать"
+                        >
+                            <Pencil size={16} />
+                        </button>
+                    )}
                     {isAdmin && (
                         <button
                             onClick={() => onDelete(order.id)}

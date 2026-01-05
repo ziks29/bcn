@@ -333,28 +333,30 @@ export default function FinancesClient({
                             Финансы<span className="text-emerald-600">.</span>
                         </h1>
                     </div>
-                    <div className="flex gap-2">
-                        <button
-                            onClick={() => {
-                                setEditingType('INCOME')
-                                setIsEditing(true)
-                            }}
-                            className="bg-emerald-600 text-white px-6 py-3 font-bold uppercase hover:bg-emerald-700 transition-colors text-sm sm:text-base flex items-center gap-2"
-                        >
-                            <Plus size={18} />
-                            Доход
-                        </button>
-                        <button
-                            onClick={() => {
-                                setEditingType('EXPENSE')
-                                setIsEditing(true)
-                            }}
-                            className="bg-red-600 text-white px-6 py-3 font-bold uppercase hover:bg-red-700 transition-colors text-sm sm:text-base flex items-center gap-2"
-                        >
-                            <Minus size={18} />
-                            Расход
-                        </button>
-                    </div>
+                    {isAdmin && (
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => {
+                                    setEditingType('INCOME')
+                                    setIsEditing(true)
+                                }}
+                                className="bg-emerald-600 text-white px-6 py-3 font-bold uppercase hover:bg-emerald-700 transition-colors text-sm sm:text-base flex items-center gap-2"
+                            >
+                                <Plus size={18} />
+                                Доход
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setEditingType('EXPENSE')
+                                    setIsEditing(true)
+                                }}
+                                className="bg-red-600 text-white px-6 py-3 font-bold uppercase hover:bg-red-700 transition-colors text-sm sm:text-base flex items-center gap-2"
+                            >
+                                <Minus size={18} />
+                                Расход
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {/* Stats Cards */}

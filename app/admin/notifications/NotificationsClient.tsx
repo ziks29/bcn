@@ -35,6 +35,9 @@ interface Notification {
     author: string
     isNew?: boolean
     isArchived?: boolean
+    price?: number
+    employeeRate?: number
+    orderId?: string | null
 }
 
 function getSentToday(history: SendGeneric[]) {
@@ -123,19 +126,30 @@ export default function NotificationsClient({
         setNotifications(initialData)
     }, [initialData])
 
-    const PRICE_PER_SEND = 42.5
+    // Updated to use per-notification rate
     const canManagePayouts = ['ADMIN', 'CHIEF_EDITOR'].includes(userRole)
 
     // Calculate stats (Personal)
     const totalSends = notifications.reduce((sum, n) => sum + (n.history?.filter(h => h.userName === userName).length || 0), 0)
     const totalPaidSends = notifications.reduce((sum, n) => sum + (n.history?.filter(h => h.userName === userName && h.isPaid).length || 0), 0)
 
-    const totalEarned = totalSends * PRICE_PER_SEND
-    const totalPaid = totalPaidSends * PRICE_PER_SEND
+    const totalEarned = notifications.reduce((sum, n) => {
+        const count = n.history?.filter(h => h.userName === userName).length || 0
+        const rate = n.employeeRate ?? 42.5
+        return sum + (count * rate)
+    }, 0)
+
+    const totalPaid = notifications.reduce((sum, n) => {
+        const count = n.history?.filter(h => h.userName === userName && h.isPaid).length || 0
+        const rate = n.employeeRate ?? 42.5
+        return sum + (count * rate)
+    }, 0)
 
     // Calculate Payout Stats for Admins
     const payoutStats = notifications.reduce((acc, note) => {
         if (!note.history) return acc
+        const rate = note.employeeRate ?? 42.5
+
         note.history.forEach(h => {
             if (!h.isPaid) {
                 if (!acc[h.userName]) {
@@ -145,7 +159,7 @@ export default function NotificationsClient({
                     }
                 }
                 acc[h.userName].count += 1
-                acc[h.userName].amount += PRICE_PER_SEND
+                acc[h.userName].amount += rate
             }
         })
         return acc
@@ -162,6 +176,8 @@ export default function NotificationsClient({
             endDate: currentNotification.endDate || new Date().toISOString().split('T')[0],
             startTime: currentNotification.startTime || "12:00",
             endTime: currentNotification.endTime || "13:00",
+            price: currentNotification.price,
+            employeeRate: currentNotification.employeeRate // Pass through 0 if set
         }
 
         if (currentNotification.id) {
@@ -186,6 +202,7 @@ export default function NotificationsClient({
             }
         }
     }
+
 
     const startEdit = (notification: Notification) => {
         setCurrentNotification(notification)
@@ -406,7 +423,7 @@ export default function NotificationsClient({
 
                         <button
                             onClick={() => {
-                                setCurrentNotification({})
+                                setCurrentNotification({ employeeRate: 42.5 })
                                 setIsEditing(true)
                             }}
                             className="bg-black text-white px-6 py-3 font-bold uppercase hover:bg-zinc-800 transition-colors text-sm sm:text-base"
@@ -469,7 +486,7 @@ export default function NotificationsClient({
                                         value={currentNotification.customer || ""}
                                         onChange={e => setCurrentNotification({ ...currentNotification, customer: e.target.value })}
                                         className="w-full border-2 border-black p-2 font-serif focus:outline-none focus:ring-2 focus:ring-pink-500"
-                                        placeholder="Например: Weazel News"
+                                        placeholder="Например: BCN"
                                         required
                                     />
                                 </div>
@@ -548,6 +565,39 @@ export default function NotificationsClient({
                                         className="w-full border-2 border-black p-2 font-serif focus:outline-none focus:ring-2 focus:ring-pink-500"
                                         required
                                     />
+                                </div>
+
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold uppercase tracking-widest mb-1">Сумма (Оплата клиентом)</label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            value={currentNotification.price || ""}
+                                            onChange={e => setCurrentNotification({ ...currentNotification, price: parseFloat(e.target.value) })}
+                                            className="w-full border-2 border-black p-2 font-serif focus:outline-none focus:ring-2 focus:ring-pink-500"
+                                            placeholder="Оставьте пустым если бесплатно"
+                                        />
+                                        <p className="text-[10px] text-zinc-500 mt-1 leading-tight">
+                                            Если указано, будет автоматически создан Заказ на эту сумму.
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold uppercase tracking-widest mb-1">Выплата (за 1 шт)</label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            step="0.1"
+                                            value={currentNotification.employeeRate !== undefined ? currentNotification.employeeRate : ""}
+                                            onChange={e => setCurrentNotification({ ...currentNotification, employeeRate: e.target.value === "" ? undefined : parseFloat(e.target.value) })}
+                                            className="w-full border-2 border-black p-2 font-serif focus:outline-none focus:ring-2 focus:ring-pink-500"
+                                            placeholder="По умолчанию 42.5"
+                                        />
+                                        <p className="text-[10px] text-zinc-500 mt-1 leading-tight">
+                                            Сколько получит сотрудник за одну отправку.
+                                        </p>
+                                    </div>
                                 </div>
 
                                 <div>

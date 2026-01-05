@@ -73,28 +73,38 @@ export async function updateOrder(id: string, data: {
             return { success: false, error: "Unauthorized" }
         }
 
+        // Fetch order to verify ownership
+        const order = await prisma.order.findUnique({
+            where: { id },
+            select: {
+                createdById: true,
+                isPaid: true,
+                totalPrice: true,
+                client: true,
+                clientName: true,
+                description: true
+            }
+        })
+
+        if (!order) {
+            return { success: false, error: "Order not found" }
+        }
+
+        // Authorization: Only creator or admin can edit
+        const user = await prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: { role: true, displayName: true, username: true }
+        })
+
+        const isAdmin = ['ADMIN', 'CHIEF_EDITOR'].includes(user?.role || '')
+        const isCreator = order.createdById === session.user.id
+
+        if (!isAdmin && !isCreator) {
+            return { success: false, error: "Forbidden: Only order creator or admin can edit" }
+        }
+
         // Handle isPaid toggle
         if (data.isPaid !== undefined) {
-            // Fetch the order to get details
-            const order = await prisma.order.findUnique({
-                where: { id },
-                select: {
-                    isPaid: true,
-                    totalPrice: true,
-                    client: true,
-                    clientName: true,
-                    description: true
-                }
-            })
-
-            if (!order) {
-                return { success: false, error: "Order not found" }
-            }
-
-            const user = await prisma.user.findUnique({
-                where: { id: session.user.id }
-            })
-
             const createdBy = user?.displayName || user?.username || "Unknown"
 
             // Create transaction in the same atomic operation
@@ -165,6 +175,17 @@ export async function deleteOrder(id: string) {
             return { success: false, error: "Unauthorized" }
         }
 
+        // Authorization: Only admin can delete
+        const user = await prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: { role: true, displayName: true, username: true }
+        })
+
+        const isAdmin = ['ADMIN', 'CHIEF_EDITOR'].includes(user?.role || '')
+        if (!isAdmin) {
+            return { success: false, error: "Forbidden: Only admins can delete orders" }
+        }
+
         // Fetch order with all related data before deletion
         const order = await prisma.order.findUnique({
             where: { id },
@@ -176,10 +197,6 @@ export async function deleteOrder(id: string) {
         if (!order) {
             return { success: false, error: "Order not found" }
         }
-
-        const user = await prisma.user.findUnique({
-            where: { id: session.user.id }
-        })
 
         const createdBy = user?.displayName || user?.username || "Unknown"
 
@@ -215,7 +232,14 @@ export async function deleteOrder(id: string) {
                 })
             }
 
-            // 3. Delete the order (cascade will delete payments and employee payments)
+            // 3. Revert/Delete Linked Notifications
+            // New Requirement: If order is deleted, delete the notification too.
+            // This also handles the "Ghost" notification issue.
+            await tx.notification.deleteMany({
+                where: { orderId: id }
+            })
+
+            // 4. Delete the order (cascade will delete payments and employee payments)
             await tx.order.delete({
                 where: { id }
             })
