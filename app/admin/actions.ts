@@ -60,6 +60,7 @@ export async function createArticle(formData: FormData) {
         const status = formData.get("status") as string || "DRAFT";
         const publishFrom = formData.get("publishFrom") as string;
         const publishTo = formData.get("publishTo") as string;
+        const isEditableByAll = formData.get("isEditableByAll") === "on";
 
         if (!title || !excerpt || !content || !category) {
             return { success: false, message: "Заполните все обязательные поля" };
@@ -79,6 +80,7 @@ export async function createArticle(formData: FormData) {
                 status,
                 publishFrom: publishFrom ? new Date(publishFrom) : null,
                 publishTo: publishTo ? new Date(publishTo) : null,
+                isEditableByAll,
                 authorId: session.user?.id as string,
             },
         });
@@ -241,6 +243,7 @@ export async function updateArticle(id: string, formData: FormData) {
         const status = formData.get("status") as string || "DRAFT";
         const publishFrom = formData.get("publishFrom") as string;
         const publishTo = formData.get("publishTo") as string;
+        const isEditableByAll = formData.get("isEditableByAll") === "on";
 
         if (!title || !excerpt || !content || !category) {
             return { success: false, message: "Заполните все обязательные поля" };
@@ -258,6 +261,7 @@ export async function updateArticle(id: string, formData: FormData) {
                 status,
                 publishFrom: publishFrom ? new Date(publishFrom) : null,
                 publishTo: publishTo ? new Date(publishTo) : null,
+                isEditableByAll,
             },
         });
 

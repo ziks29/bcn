@@ -20,6 +20,7 @@ model User {
   approved  Boolean  @default(false)
   createdAt DateTime @default(now())
   articles  Article[]
+  notifications Notification[]
 }
 
 model Article {
@@ -40,6 +41,8 @@ model Article {
   
   author    User     @relation(fields: [authorId], references: [id])
   authorId  String   @db.ObjectId
+  
+  isEditableByAll Boolean @default(false)
 }
 
 model Ad {
@@ -102,10 +105,14 @@ model Notification {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   isArchived Boolean @default(false)
+  
+  authorId  String?  @db.ObjectId
+  authorUser User?   @relation(fields: [authorId], references: [id])
 }
 
 type NotificationHistory {
   userName  String
+  userId    String?  @db.ObjectId
   timestamp DateTime
   isPaid    Boolean  @default(false)
 }
@@ -127,6 +134,7 @@ model ExcalidrawSnapshot {
   appState  Json
   files     Json     @default("{}")
   createdBy String
+  createdById String? @db.ObjectId
   createdAt DateTime @default(now())
 }
 

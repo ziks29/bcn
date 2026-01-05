@@ -21,7 +21,7 @@ export async function getBackupData() {
         prisma.galleryItem.findMany(),
         prisma.category.findMany(),
         prisma.contact.findMany(),
-        prisma.notification.findMany({ include: { history: true } }),
+        prisma.notification.findMany(),
         prisma.excalidrawBoard.findMany(),
         prisma.excalidrawSnapshot.findMany(),
         prisma.order.findMany({ include: { payments: true } }),

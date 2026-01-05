@@ -121,6 +121,17 @@ export default async function EditArticlePage(props: { params: Promise<{ id: str
                             <label className="block text-xs font-bold uppercase tracking-widest mb-1">Текст статьи</label>
                             <ArticleEditorInput initialContent={article.content} articleId={article.id} />
                         </div>
+
+                        <div className="flex items-center gap-3 border-2 border-black p-4 bg-white">
+                            <input
+                                type="checkbox"
+                                id="isEditableByAll"
+                                name="isEditableByAll"
+                                className="w-6 h-6 accent-black"
+                                defaultChecked={(article as any).isEditableByAll}
+                            />
+                            <label htmlFor="isEditableByAll" className="font-bold uppercase cursor-pointer select-none">Открыть всем для редактирования</label>
+                        </div>
                     </div>
                 </ArticleForm>
             </div>
