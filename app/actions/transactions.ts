@@ -1,6 +1,6 @@
 "use server"
 
-import { revalidatePath } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
 
@@ -14,18 +14,22 @@ export async function createTransaction(data: {
 }) {
     try {
         const session = await auth()
-        if (!session) {
+        if (!session?.user?.id) {
             return { success: false, error: "Unauthorized" }
         }
 
         await prisma.transaction.create({
             data: {
                 ...data,
-                date: new Date(data.date)
+                date: new Date(data.date),
+                createdById: session.user.id  // Save creator ID
             }
         })
 
+        revalidateTag("business", "max")
+        revalidateTag("transactions", "max")
         revalidatePath("/admin/finances")
+        revalidatePath("/admin/business")
         return { success: true }
     } catch (error) {
         console.error("Error creating transaction:", error)
@@ -54,6 +58,8 @@ export async function updateTransaction(id: string, data: {
             }
         })
 
+        revalidateTag("business", "max")
+        revalidateTag("transactions", "max")
         revalidatePath("/admin/finances")
         return { success: true }
     } catch (error) {
@@ -73,6 +79,8 @@ export async function deleteTransaction(id: string) {
             where: { id }
         })
 
+        revalidateTag("business", "max")
+        revalidateTag("transactions", "max")
         revalidatePath("/admin/finances")
         return { success: true }
     } catch (error) {

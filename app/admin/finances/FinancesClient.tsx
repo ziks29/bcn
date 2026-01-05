@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useMemo } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Plus, Minus, Search, Pencil, Trash2, DollarSign, Filter, TrendingUp, TrendingDown } from "lucide-react"
 import { toast } from "sonner"
@@ -29,6 +30,8 @@ interface Transaction {
     category: string | null
     date: string
     createdBy: string
+    orderId?: string | null  // Link to order for invoice payments
+    employeePaymentId?: string | null  // Link to employee payment for salary transactions
 }
 
 const TRANSACTION_TYPES = [
@@ -47,7 +50,13 @@ const CATEGORIES = [
 
 function formatDate(dateStr: string) {
     const date = new Date(dateStr)
-    return date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit' })
+    return date.toLocaleString('ru-RU', {
+        day: '2-digit',
+        month: '2-digit',
+        year: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    })
 }
 
 function formatCurrency(amount: number) {
@@ -65,6 +74,7 @@ export default function FinancesClient({
     payments?: Payment[]
     transactions?: Transaction[]
 }) {
+    const router = useRouter()
     const [isEditing, setIsEditing] = useState(false)
     const [editingType, setEditingType] = useState<'INCOME' | 'EXPENSE'>('INCOME')
     const [formData, setFormData] = useState({
@@ -77,7 +87,8 @@ export default function FinancesClient({
     // Filters
     const [searchTerm, setSearchTerm] = useState('')
     const [typeFilter, setTypeFilter] = useState('ALL')
-    const [dateRange, setDateRange] = useState('ALL') // ALL, THIS_MONTH, LAST_MONTH
+    const [startDate, setStartDate] = useState('')
+    const [endDate, setEndDate] = useState('')
 
     const isAdmin = ['ADMIN', 'CHIEF_EDITOR'].includes(userRole)
 
@@ -125,10 +136,12 @@ export default function FinancesClient({
             type: 'PAYMENT' as const,
             amount: p.amount,
             description: `${p.order.client} - ${p.order.description}`,
-            category: p.paymentMethod,
+            category: 'Оплата клиента',
             date: p.paymentDate,
             createdBy: p.receivedBy,
-            isPayment: true
+            isPayment: true,
+            orderId: null,  // Payments don't have orderId
+            employeePaymentId: null  // Payments don't have employeePaymentId
         }))
 
         const transactionEntries = transactions.map(t => ({
@@ -139,48 +152,58 @@ export default function FinancesClient({
             category: t.category || '-',
             date: t.date,
             createdBy: t.createdBy,
-            isPayment: false
+            isPayment: false,
+            orderId: t.orderId,  // Include orderId for invoice payments
+            employeePaymentId: t.employeePaymentId  // Include employeePaymentId for salary transactions
         }))
 
         let combined = [...paymentEntries, ...transactionEntries]
 
         // Apply filters
-        if (searchTerm) {
-            combined = combined.filter(e =>
-                e.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                e.category.toLowerCase().includes(searchTerm.toLowerCase())
-            )
-        }
-
         if (typeFilter !== 'ALL') {
-            if (typeFilter === 'INCOME') {
-                combined = combined.filter(e => e.type === 'INCOME' || e.type === 'PAYMENT')
-            } else {
-                combined = combined.filter(e => e.type === 'EXPENSE')
-            }
+            combined = combined.filter(entry => {
+                if (typeFilter === 'INCOME') {
+                    return entry.type === 'INCOME' || entry.type === 'PAYMENT';
+                } else if (typeFilter === 'EXPENSE') {
+                    return entry.type === 'EXPENSE';
+                }
+                return true;
+            });
         }
 
-        if (dateRange !== 'ALL') {
-            const now = new Date()
-            let startDate: Date
+        if (searchTerm) {
+            combined = combined.filter(entry =>
+                entry.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                entry.category.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+        }
 
-            if (dateRange === 'THIS_MONTH') {
-                startDate = new Date(now.getFullYear(), now.getMonth(), 1)
-            } else { // LAST_MONTH
-                startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1)
-                const endDate = new Date(now.getFullYear(), now.getMonth(), 0)
-                combined = combined.filter(e => {
-                    const entryDate = new Date(e.date)
-                    return entryDate >= startDate && entryDate <= endDate
-                })
-                return combined.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-            }
+        // Date range filter
+        if (startDate || endDate) {
+            combined = combined.filter(entry => {
+                const entryDate = new Date(entry.date)
+                const start = startDate ? new Date(startDate) : null
+                const end = endDate ? new Date(endDate) : null
 
-            combined = combined.filter(e => new Date(e.date) >= startDate)
+                if (start && end) {
+                    // Set end date to end of day for inclusive filtering
+                    const endOfDay = new Date(end);
+                    endOfDay.setHours(23, 59, 59, 999);
+                    return entryDate >= start && entryDate <= endOfDay
+                } else if (start) {
+                    return entryDate >= start
+                } else if (end) {
+                    // Set end date to end of day for inclusive filtering
+                    const endOfDay = new Date(end);
+                    endOfDay.setHours(23, 59, 59, 999);
+                    return entryDate <= endOfDay
+                }
+                return true
+            })
         }
 
         return combined.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    }, [payments, transactions, searchTerm, typeFilter, dateRange])
+    }, [payments, transactions, searchTerm, typeFilter, startDate, endDate])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -190,17 +213,22 @@ export default function FinancesClient({
             return
         }
 
+        const transactionDate = new Date(formData.date)
+        const now = new Date()
+        transactionDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds())
+
         const res = await createTransaction({
             type: editingType,
             amount: Number(formData.amount),
             description: formData.description,
             category: formData.category || undefined,
-            date: new Date(formData.date),
+            date: transactionDate,
             createdBy: userName
         })
 
         if (res.success) {
             toast.success(editingType === 'INCOME' ? "Доход добавлен" : "Расход добавлен")
+            router.refresh()
             setIsEditing(false)
             setFormData({
                 amount: '',
@@ -218,6 +246,7 @@ export default function FinancesClient({
             const res = await deleteTransaction(id)
             if (res.success) {
                 toast.success("Транзакция удалена")
+                router.refresh()
             } else {
                 toast.error("Ошибка при удалении")
             }
@@ -383,18 +412,37 @@ export default function FinancesClient({
                                 ))}
                             </select>
                         </div>
-                        <div>
-                            <label className="block text-xs font-bold uppercase tracking-widest mb-2">Период</label>
-                            <select
-                                value={dateRange}
-                                onChange={e => setDateRange(e.target.value)}
-                                className="w-full border-2 border-black p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                                <option value="ALL">Все время</option>
-                                <option value="THIS_MONTH">Этот месяц</option>
-                                <option value="LAST_MONTH">Прошлый месяц</option>
-                            </select>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-xs font-bold uppercase tracking-widest mb-2">Начало периода</label>
+                                <input
+                                    type="date"
+                                    value={startDate}
+                                    onChange={e => setStartDate(e.target.value)}
+                                    className="w-full border-2 border-black p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold uppercase tracking-widest mb-2">Конец периода</label>
+                                <input
+                                    type="date"
+                                    value={endDate}
+                                    onChange={e => setEndDate(e.target.value)}
+                                    className="w-full border-2 border-black p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
                         </div>
+                        {(startDate || endDate) && (
+                            <button
+                                onClick={() => {
+                                    setStartDate('')
+                                    setEndDate('')
+                                }}
+                                className="text-xs text-blue-600 hover:text-blue-800 underline"
+                            >
+                                Очистить даты
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -432,6 +480,14 @@ export default function FinancesClient({
                                                 {entry.isPayment && (
                                                     <div className="text-xs text-blue-600 mt-1">Платёж от клиента</div>
                                                 )}
+                                                {(entry.orderId || entry.employeePaymentId) && (
+                                                    <Link
+                                                        href={`/admin/orders?orderId=${entry.orderId || ''}`}
+                                                        className="text-xs text-purple-600 hover:text-purple-800 mt-1 inline-flex items-center gap-1"
+                                                    >
+                                                        → Связано с заказом
+                                                    </Link>
+                                                )}
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-3">
@@ -439,7 +495,7 @@ export default function FinancesClient({
                                                 }`}>
                                                 {entry.type === 'EXPENSE' ? '-' : '+'}{formatCurrency(entry.amount)}
                                             </div>
-                                            {!entry.isPayment && isAdmin && (
+                                            {!entry.isPayment && !entry.orderId && !entry.employeePaymentId && entry.category !== 'Удаление заказа' && isAdmin && (
                                                 <button
                                                     onClick={() => handleDelete(entry.id)}
                                                     className="p-2 hover:bg-red-100 text-red-600 rounded transition-colors"

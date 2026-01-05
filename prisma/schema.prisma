@@ -21,6 +21,11 @@ model User {
   createdAt DateTime @default(now())
   articles  Article[]
   notifications Notification[]
+  ordersAsEmployee   Order[]       @relation("OrderEmployee")
+  ordersCreated      Order[]       @relation("OrderCreator")
+  paymentsReceived   Payment[]     @relation("PaymentReceiver")
+  employeePaymentsProcessed EmployeePayment[] @relation("EmployeePaymentProcessor")
+  transactionsCreated Transaction[] @relation("TransactionCreator")
 }
 
 model Article {
@@ -43,6 +48,11 @@ model Article {
   authorId  String   @db.ObjectId
   
   isEditableByAll Boolean @default(false)
+  
+  // Indexes for query performance
+  @@index([status])
+  @@index([createdAt])
+  @@index([authorId])
 }
 
 model Ad {
@@ -108,6 +118,11 @@ model Notification {
   
   authorId  String?  @db.ObjectId
   authorUser User?   @relation(fields: [authorId], references: [id])
+  
+  // Indexes for query performance
+  @@index([isArchived])
+  @@index([createdAt])
+  @@index([authorId])
 }
 
 type NotificationHistory {
@@ -140,21 +155,34 @@ model ExcalidrawSnapshot {
 
 model Order {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  client      String
+  client      String   // Phone number in format xxx-xxxx
+  clientName  String   // Client name
   description String
-  packageType String
-  quantity    Int
-  startDate   String   // Stored as YYYY-MM-DD
-  endDate     String   // Stored as YYYY-MM-DD
-  employee    String
-  status      String   @default("PENDING") // PENDING, ACTIVE, COMPLETED, CANCELLED
+  service     String   // Service type
+  startDate   String?  // Optional - Stored as YYYY-MM-DD
+  endDate     String?  // Optional - Stored as YYYY-MM-DD
+  employee    String   // Legacy: keep for backward compatibility
   totalPrice  Float
+  employeePaidAmount Float @default(0) // Track amount paid to employee
   notes       String?
-  createdBy   String
+  createdBy   String   // Legacy: keep for backward compatibility
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
-  payments    Payment[]
+  // New: User ID tracking
+  employeeId  String?  @db.ObjectId
+  createdById String?  @db.ObjectId
+  
+  // Relations
+  employeeUser  User?  @relation("OrderEmployee", fields: [employeeId], references: [id])
+  createdByUser User?  @relation("OrderCreator", fields: [createdById], references: [id])
+  isPaid        Boolean  @default(false)
+  payments      Payment[]
+  employeePayments EmployeePayment[]
+  
+  // Indexes for query performance
+  @@index([createdAt])
+  @@index([employeeId])
 }
 
 model Payment {
@@ -163,13 +191,48 @@ model Payment {
   amount        Float
   paymentDate   DateTime
   paymentMethod String   // CASH, CARD, BANK_TRANSFER
-  receivedBy    String
+  receivedBy    String   // Legacy: keep for backward compatibility
   receiptNumber String?
   notes         String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   
-  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  // New: User ID tracking (accepts CUID from NextAuth)
+  receivedById  String?
+  
+  // Relations
+  order          Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  receivedByUser User?  @relation("PaymentReceiver", fields: [receivedById], references: [id])
+  
+  // Indexes for query performance
+  @@index([paymentDate])
+  @@index([orderId])
+  @@index([receivedById])
+}
+
+model EmployeePayment {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  orderId       String   @db.ObjectId
+  amount        Float
+  paymentDate   DateTime
+  paymentMethod String   // CASH, CARD, BANK_TRANSFER
+  processedBy   String   
+  recipient     String?  // Who actually received the money (if different from order employee)
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // User ID tracking
+  processedById String?  @db.ObjectId
+  
+  // Relations
+  order          Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  processedByUser User?  @relation("EmployeePaymentProcessor", fields: [processedById], references: [id])
+  
+  // Indexes for query performance
+  @@index([paymentDate])
+  @@index([orderId])
+  @@index([processedById])
 }
 
 model Transaction {
@@ -179,7 +242,26 @@ model Transaction {
   description String
   category    String?  // Optional: Salary, Bills, Other Income, etc.
   date        DateTime
-  createdBy   String
+  createdBy   String   // Legacy: keep for backward compatibility
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  
+  // New: User ID tracking
+  createdById String?  @db.ObjectId
+  
+  // Optional: Link to order for invoice payment transactions
+  orderId           String?  @db.ObjectId
+  
+  // Optional: Link to employee payment for salary transactions
+  employeePaymentId String?  @db.ObjectId
+  
+  // Relation
+  createdByUser User?  @relation("TransactionCreator", fields: [createdById], references: [id])
+  
+  // Indexes for query performance
+  @@index([date])
+  @@index([type])
+  @@index([createdById])
+  @@index([orderId])
+  @@index([employeePaymentId])
 }
