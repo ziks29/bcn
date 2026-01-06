@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { Plus, Minus, Search, Pencil, Trash2, DollarSign, Filter, TrendingUp, TrendingDown } from "lucide-react"
+import { Plus, Minus, Search, Trash2, Filter, TrendingUp, TrendingDown } from "lucide-react"
 import { toast } from "sonner"
 import {
     createTransaction,
@@ -38,14 +38,6 @@ const TRANSACTION_TYPES = [
     { value: 'ALL', label: 'Все', color: 'zinc' },
     { value: 'INCOME', label: 'Доход', color: 'emerald' },
     { value: 'EXPENSE', label: 'Расход', color: 'red' }
-]
-
-const CATEGORIES = [
-    'Зарплата',
-    'Счета',
-    'Аренда',
-    'Другой доход',
-    'Прочее'
 ]
 
 function formatDate(dateStr: string) {

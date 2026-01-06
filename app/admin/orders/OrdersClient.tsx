@@ -89,6 +89,19 @@ export default function OrdersClient({
         }
     }, [searchParams, orders])
 
+    // Pre-fill employee field when employee payment modal opens
+    useEffect(() => {
+        if (employeePaymentModal.isOpen && employeePaymentModal.orderId) {
+            const order = orders.find(o => o.id === employeePaymentModal.orderId)
+            if (order) {
+                setEmployeePaymentForm(prev => ({
+                    ...prev,
+                    employee: order.employee
+                }))
+            }
+        }
+    }, [employeePaymentModal.isOpen, employeePaymentModal.orderId, orders])
+
     // Get unique employees from orders for filter
     const allEmployees = useMemo(() => {
         const orderEmployees = new Set(orders.map(o => o.employee))
@@ -116,8 +129,9 @@ export default function OrdersClient({
             let bVal: any = b[sortKey]
 
             if (sortKey === 'startDate') {
-                aVal = new Date(a.startDate).getTime()
-                bVal = new Date(b.startDate).getTime()
+                // Fall back to createdAt if startDate is null/undefined
+                aVal = new Date(a.startDate || a.createdAt).getTime()
+                bVal = new Date(b.startDate || b.createdAt).getTime()
             } else if (sortKey === 'totalPrice') {
                 aVal = a.totalPrice
                 bVal = b.totalPrice
@@ -584,6 +598,7 @@ export default function OrdersClient({
                     onToggleExpand={toggleRowExpansion}
                     highlightedOrderId={highlightedOrderId}
                     isAdmin={isAdmin}
+                    userName={userName}
                     onEdit={(order) => {
                         setCurrentOrder(order)
                         setIsEditing(true)
@@ -591,8 +606,6 @@ export default function OrdersClient({
                     onDelete={handleDelete}
                     onToggleIsPaid={handleToggleIsPaid}
                     onAddEmployeePayment={(orderId) => {
-                        const order = orders.find(o => o.id === orderId)
-                        setEmployeePaymentForm(prev => ({ ...prev, employee: order?.employee || '' }))
                         setEmployeePaymentModal({ isOpen: true, orderId })
                     }}
                     onDeleteEmployeePayment={handleDeleteEmployeePayment}
