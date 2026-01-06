@@ -404,7 +404,7 @@ export default function OrdersClient({
             paymentDate: employeePaymentForm.paymentDate,
             paymentMethod: employeePaymentForm.paymentMethod,
             processedBy: userName,
-            notes: employeePaymentForm.notes || "Автовиплата (85%)"
+            notes: employeePaymentForm.notes || "Автовыплата (85%)"
         }
 
         setOrders(prevOrders =>
