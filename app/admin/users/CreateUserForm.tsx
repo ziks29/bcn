@@ -26,7 +26,7 @@ export default function CreateUserForm() {
             </div>
             <div>
                 <label className="block text-xs font-bold uppercase tracking-widest mb-1">Отображаемое имя (Полное имя)</label>
-                <input name="displayName" className="w-full border-2 border-black p-2" placeholder="Например: Иван Иванов" />
+                <input name="displayName" className="w-full border-2 border-black p-2" placeholder="Например: Tomas Jackson" />
             </div>
             <div>
                 <label className="block text-xs font-bold uppercase tracking-widest mb-1">Пароль</label>

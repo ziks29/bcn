@@ -77,7 +77,7 @@ export default function CreateContactForm({ users }: { users: UserOption[] }) {
                             required
                             disabled={isPending}
                             className="w-full border-2 border-black p-2 disabled:opacity-50"
-                            placeholder="Иван Иванов"
+                            placeholder="Tomas Jackson"
                         />
                     </div>
                     <div>

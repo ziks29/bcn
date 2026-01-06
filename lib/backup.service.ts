@@ -10,7 +10,10 @@ export async function getBackupData() {
         contacts,
         notifications,
         excalidrawBoards,
-        excalidrawSnapshots
+        excalidrawSnapshots,
+        orders,
+        payments,
+        transactions
     ] = await Promise.all([
         prisma.user.findMany(),
         prisma.article.findMany(),
@@ -20,7 +23,10 @@ export async function getBackupData() {
         prisma.contact.findMany(),
         prisma.notification.findMany(),
         prisma.excalidrawBoard.findMany(),
-        prisma.excalidrawSnapshot.findMany()
+        prisma.excalidrawSnapshot.findMany(),
+        prisma.order.findMany({ include: { payments: true } }),
+        prisma.payment.findMany(),
+        prisma.transaction.findMany()
     ])
 
     return {
@@ -35,7 +41,10 @@ export async function getBackupData() {
             contacts,
             notifications,
             excalidrawBoards,
-            excalidrawSnapshots
+            excalidrawSnapshots,
+            orders,
+            payments,
+            transactions
         }
     }
 }
