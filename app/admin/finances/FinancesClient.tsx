@@ -489,7 +489,7 @@ export default function FinancesClient({
                                                 }`}>
                                                 {entry.type === 'EXPENSE' ? '-' : '+'}{formatCurrency(entry.amount)}
                                             </div>
-                                            {!entry.isPayment && !entry.orderId && !entry.employeePaymentId && entry.category !== 'Удаление заказа' && isAdmin && (
+                                            {isAdmin && (
                                                 <button
                                                     onClick={() => handleDelete(entry.id)}
                                                     className="p-2 hover:bg-red-100 text-red-600 rounded transition-colors"
