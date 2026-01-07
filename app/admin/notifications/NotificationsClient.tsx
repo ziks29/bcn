@@ -119,6 +119,10 @@ export default function NotificationsClient({
         isOpen: false,
         employeeName: null
     })
+    const [noPriceConfirmModal, setNoPriceConfirmModal] = useState<{ isOpen: boolean, data: any | null }>({
+        isOpen: false,
+        data: null
+    })
     const [isArchiveOpen, setIsArchiveOpen] = useState(false)
 
     // Sync state with prop updates (from server revalidation)
@@ -191,7 +195,16 @@ export default function NotificationsClient({
                 toast.error("Ошибка при обновлении")
             }
         } else {
-            // Create
+            // Create - check if price is empty
+            const hasPrice = payload.price !== undefined && payload.price !== null && payload.price !== 0
+
+            if (!hasPrice) {
+                // Show confirmation modal
+                setNoPriceConfirmModal({ isOpen: true, data: payload })
+                return
+            }
+
+            // If price is set, create directly
             const res = await createNotification({ ...payload, author: userName })
             if (res.success) {
                 toast.success("Рассылка создана")
@@ -268,6 +281,20 @@ export default function NotificationsClient({
             toast.error("Ошибка при проведении выплаты")
         }
         setPayoutConfirmModal({ isOpen: false, employeeName: null })
+    }
+
+    const confirmNoPriceCreate = async () => {
+        if (!noPriceConfirmModal.data) return
+
+        const res = await createNotification({ ...noPriceConfirmModal.data, author: userName })
+        if (res.success) {
+            toast.success("Рассылка создана")
+            setIsEditing(false)
+            setCurrentNotification({})
+        } else {
+            toast.error("Ошибка при создании")
+        }
+        setNoPriceConfirmModal({ isOpen: false, data: null })
     }
 
     const toggleArchive = async (id: string) => {
@@ -392,6 +419,40 @@ export default function NotificationsClient({
                                 className="bg-emerald-600 text-white px-6 py-2 font-bold uppercase hover:bg-emerald-700 transition-colors border-2 border-emerald-800"
                             >
                                 Выплатить
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* No Price Confirmation Modal */}
+            {noPriceConfirmModal.isOpen && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[60]">
+                    <div className="bg-white p-6 md:p-8 max-w-md w-full border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+                        <h3 className="font-headline text-xl font-bold mb-4 text-center">Внимание</h3>
+                        <div className="mb-6">
+                            <p className="font-serif text-lg text-center mb-3">
+                                Сумма не указана.
+                            </p>
+                            <p className="font-serif text-base text-center text-amber-700 bg-amber-50 border border-amber-200 p-3 rounded">
+                                Заказ <span className="font-bold">не будет создан</span> в системе.
+                            </p>
+                        </div>
+                        <p className="font-serif text-sm text-center mb-6 text-zinc-600">
+                            Продолжить создание рассылки?
+                        </p>
+                        <div className="flex gap-4 justify-center">
+                            <button
+                                onClick={() => setNoPriceConfirmModal({ isOpen: false, data: null })}
+                                className="px-4 py-2 font-bold uppercase hover:bg-zinc-100 transition-colors border-2 border-transparent hover:border-black"
+                            >
+                                Отмена
+                            </button>
+                            <button
+                                onClick={confirmNoPriceCreate}
+                                className="bg-black text-white px-6 py-2 font-bold uppercase hover:bg-zinc-800 transition-colors border-2 border-black"
+                            >
+                                Продолжить
                             </button>
                         </div>
                     </div>

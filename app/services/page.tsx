@@ -120,6 +120,14 @@ export default async function ServicesPage() {
                                 <span className="font-medium">Рассылки от агентства</span>
                                 <span className="font-bold text-[#4b3634]">от 50$</span>
                             </li>
+                            <li className="flex justify-between items-center border-b border-zinc-100 pb-2">
+                                <span className="font-medium">Печать меню</span>
+                                <span className="font-bold text-[#4b3634]">35$</span>
+                            </li>
+                            <li className="flex justify-between items-center border-b border-zinc-100 pb-2">
+                                <span className="font-medium">Печать визитки</span>
+                                <span className="font-bold text-[#4b3634]">50$</span>
+                            </li>
                             <li className="flex justify-between items-center">
                                 <span className="font-medium">Сайты</span>
                                 <span className="font-bold text-[#4b3634]">от 9 000$</span>
