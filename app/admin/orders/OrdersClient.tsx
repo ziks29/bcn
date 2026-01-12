@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { Plus } from "lucide-react"
+import { Plus, ChevronDown, ChevronRight } from "lucide-react"
 import { toast } from "sonner"
 import {
     createOrder,
@@ -24,6 +24,41 @@ import PaymentModal from "./components/modals/PaymentModal"
 import EmployeePaymentModal from "./components/modals/EmployeePaymentModal"
 import OrderFormModal from "./components/modals/OrderFormModal"
 import OrdersTable from "./components/table/OrdersTable"
+
+// Helper to get ISO week number and year
+function getISOWeekAndYear(date: Date) {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+    return { year: d.getUTCFullYear(), week: weekNo };
+}
+
+// Helper to get start and end dates of a week
+function getWeekRange(year: number, week: number) {
+    const simple = new Date(Date.UTC(year, 0, 1 + (week - 1) * 7));
+    const dow = simple.getUTCDay();
+    const isoWeekStart = simple;
+    if (dow <= 4)
+        isoWeekStart.setUTCDate(simple.getUTCDate() - simple.getUTCDay() + 1);
+    else
+        isoWeekStart.setUTCDate(simple.getUTCDate() + 8 - simple.getUTCDay());
+
+    // Create new date objects to avoid mutation issues
+    const start = new Date(isoWeekStart);
+    const end = new Date(isoWeekStart);
+    end.setUTCDate(end.getUTCDate() + 6);
+
+    return { start, end };
+}
+
+function formatDate(date: Date) {
+    const d = date.getDate().toString().padStart(2, '0');
+    const m = (date.getMonth() + 1).toString().padStart(2, '0');
+    const y = date.getFullYear().toString().slice(-2);
+    return `${d}.${m}.${y}`;
+}
 
 export default function OrdersClient({
     userName,
@@ -67,12 +102,34 @@ export default function OrdersClient({
     const [sortKey, setSortKey] = useState<SortKey>('startDate')
     const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
 
+    // Expanded weeks state
+    const [expandedWeeks, setExpandedWeeks] = useState<Set<string>>(new Set())
+
     const isAdmin = ['ADMIN', 'CHIEF_EDITOR'].includes(userRole)
+
+    // Initial expansion of current week
+    useEffect(() => {
+        const { year, week } = getISOWeekAndYear(new Date())
+        setExpandedWeeks(new Set([`${year}-W${week}`]))
+    }, [])
 
     // Handle orderId from URL query params (for navigation from Finances)
     useEffect(() => {
         const orderId = searchParams.get('orderId')
         if (orderId && orders.some(o => o.id === orderId)) {
+            // Find which week this order belongs to and expand it
+            const order = orders.find(o => o.id === orderId)
+            if (order) {
+                const date = new Date(order.startDate || order.createdAt)
+                const { year, week } = getISOWeekAndYear(date)
+                const weekKey = `${year}-W${week}`
+                setExpandedWeeks(prev => {
+                    const next = new Set(prev)
+                    next.add(weekKey)
+                    return next
+                })
+            }
+
             // Auto-expand the order
             setExpandedRows(new Set([orderId]))
             // Highlight temporarily
@@ -110,8 +167,9 @@ export default function OrdersClient({
         return Array.from(combined).sort()
     }, [orders, employees])
 
-    // Filter and Sort Orders
-    const filteredAndSortedOrders = useMemo(() => {
+    // Filter, Sort and Group Orders
+    const groupedOrders = useMemo(() => {
+        // 1. Filter
         let filtered = orders.filter(order => {
             const matchesSearch =
                 order.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -123,31 +181,53 @@ export default function OrdersClient({
             return matchesSearch && matchesEmployee
         })
 
-        // Sort
-        filtered.sort((a, b) => {
-            let aVal: any = a[sortKey]
-            let bVal: any = b[sortKey]
+        // 2. Group by Week
+        const groups: Record<string, Order[]> = {}
 
-            if (sortKey === 'startDate') {
-                // Fall back to createdAt if startDate is null/undefined
-                aVal = new Date(a.startDate || a.createdAt).getTime()
-                bVal = new Date(b.startDate || b.createdAt).getTime()
-            } else if (sortKey === 'totalPrice') {
-                aVal = a.totalPrice
-                bVal = b.totalPrice
-            } else {
-                aVal = String(aVal).toLowerCase()
-                bVal = String(bVal).toLowerCase()
-            }
-
-            if (sortDirection === 'asc') {
-                return aVal > bVal ? 1 : -1
-            } else {
-                return aVal < bVal ? 1 : -1
-            }
+        filtered.forEach(order => {
+            const date = new Date(order.startDate || order.createdAt)
+            const { year, week } = getISOWeekAndYear(date)
+            const key = `${year}-W${week}`
+            if (!groups[key]) groups[key] = []
+            groups[key].push(order)
         })
 
-        return filtered
+        // 3. Sort within groups
+        Object.keys(groups).forEach(key => {
+            groups[key].sort((a, b) => {
+                let aVal: any = a[sortKey]
+                let bVal: any = b[sortKey]
+
+                if (sortKey === 'startDate') {
+                    // Fall back to createdAt if startDate is null/undefined
+                    aVal = new Date(a.startDate || a.createdAt).getTime()
+                    bVal = new Date(b.startDate || b.createdAt).getTime()
+                } else if (sortKey === 'totalPrice') {
+                    aVal = a.totalPrice
+                    bVal = b.totalPrice
+                } else {
+                    aVal = String(aVal).toLowerCase()
+                    bVal = String(bVal).toLowerCase()
+                }
+
+                if (sortDirection === 'asc') {
+                    return aVal > bVal ? 1 : -1
+                } else {
+                    return aVal < bVal ? 1 : -1
+                }
+            })
+        })
+
+        // 4. Return sorted groups (keys sorted descending by week/year)
+        const sortedKeys = Object.keys(groups).sort((a, b) => {
+            // key format YYYY-Www. String comparison works for descending order
+            return b.localeCompare(a)
+        })
+
+        return sortedKeys.map(key => ({
+            key,
+            orders: groups[key]
+        }))
     }, [orders, searchTerm, employeeFilter, sortKey, sortDirection])
 
     // Calculate Statistics
@@ -185,6 +265,16 @@ export default function OrdersClient({
             newExpanded.add(orderId)
         }
         setExpandedRows(newExpanded)
+    }
+
+    const toggleWeekExpansion = (weekKey: string) => {
+        const newExpanded = new Set(expandedWeeks)
+        if (newExpanded.has(weekKey)) {
+            newExpanded.delete(weekKey)
+        } else {
+            newExpanded.add(weekKey)
+        }
+        setExpandedWeeks(newExpanded)
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -588,34 +678,70 @@ export default function OrdersClient({
                     allEmployees={allEmployees}
                 />
 
-                {/* Orders Table */}
-                <OrdersTable
-                    orders={filteredAndSortedOrders}
-                    sortKey={sortKey}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                    expandedRows={expandedRows}
-                    onToggleExpand={toggleRowExpansion}
-                    highlightedOrderId={highlightedOrderId}
-                    isAdmin={isAdmin}
-                    userName={userName}
-                    onEdit={(order) => {
-                        setCurrentOrder(order)
-                        setIsEditing(true)
-                    }}
-                    onDelete={handleDelete}
-                    onToggleIsPaid={handleToggleIsPaid}
-                    onAddEmployeePayment={(orderId) => {
-                        setEmployeePaymentModal({ isOpen: true, orderId })
-                    }}
-                    onDeleteEmployeePayment={handleDeleteEmployeePayment}
-                    getEmployeePaymentStatus={getEmployeePaymentStatus}
-                />
+                {/* Orders grouped by week */}
+                <div className="space-y-6">
+                    {groupedOrders.map((group) => {
+                        const { key, orders: groupOrders } = group
+                        const [yearStr, weekStr] = key.split('-W')
+                        const year = parseInt(yearStr)
+                        const week = parseInt(weekStr)
+                        const { start, end } = getWeekRange(year, week)
+                        const dateRange = `${formatDate(start)} - ${formatDate(end)}`
+                        const isExpanded = expandedWeeks.has(key)
+
+                        return (
+                            <div key={key} className="border-2 border-black/10 bg-white shadow-sm">
+                                <button
+                                    onClick={() => toggleWeekExpansion(key)}
+                                    className="w-full flex items-center justify-between p-4 bg-zinc-50 hover:bg-zinc-100 transition-colors border-b border-black/10"
+                                >
+                                    <div className="flex items-center gap-4">
+                                        {isExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+                                        <div className="text-left">
+                                            <h3 className="font-headline text-lg uppercase tracking-tight">Week {week}, {year}</h3>
+                                            <p className="text-sm text-zinc-500 font-mono">{dateRange}</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-sm font-bold bg-black text-white px-3 py-1 rounded-full">
+                                        {groupOrders.length}
+                                    </div>
+                                </button>
+
+                                {isExpanded && (
+                                    <div className="border-t border-black/10">
+                                        <OrdersTable
+                                            orders={groupOrders}
+                                            sortKey={sortKey}
+                                            sortDirection={sortDirection}
+                                            onSort={handleSort}
+                                            expandedRows={expandedRows}
+                                            onToggleExpand={toggleRowExpansion}
+                                            highlightedOrderId={highlightedOrderId}
+                                            isAdmin={isAdmin}
+                                            userName={userName}
+                                            onEdit={(order) => {
+                                                setCurrentOrder(order)
+                                                setIsEditing(true)
+                                            }}
+                                            onDelete={handleDelete}
+                                            onToggleIsPaid={handleToggleIsPaid}
+                                            onAddEmployeePayment={(orderId) => {
+                                                setEmployeePaymentModal({ isOpen: true, orderId })
+                                            }}
+                                            onDeleteEmployeePayment={handleDeleteEmployeePayment}
+                                            getEmployeePaymentStatus={getEmployeePaymentStatus}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        )
+                    })}
+                </div>
 
                 {/* Results Summary */}
-                {filteredAndSortedOrders.length !== orders.length && (
-                    <div className="mt-4 text-sm text-zinc-600 text-center">
-                        Показано {filteredAndSortedOrders.length} из {orders.length} заказов
+                {groupedOrders.length === 0 && (
+                    <div className="mt-8 text-center text-zinc-500 py-12 border-2 border-dashed border-zinc-300">
+                        Заказы не найдены
                     </div>
                 )}
             </div>

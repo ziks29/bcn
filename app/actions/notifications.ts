@@ -13,6 +13,9 @@ export async function getNotifications() {
             include: {
                 authorUser: {
                     select: { displayName: true, username: true }
+                },
+                order: {
+                    select: { totalPrice: true }
                 }
             }
         })
@@ -47,7 +50,8 @@ export async function getNotifications() {
             return {
                 ...n,
                 author: authorName, // Use resolved author name
-                history: enrichedHistory
+                history: enrichedHistory,
+                price: n.order?.totalPrice // Get price from linked Order
             }
         })
 
@@ -357,7 +361,11 @@ export async function payAllEmployee(employeeName: string) {
             const updatedHistory = note.history.map((h: any) => {
                 const resolvedName = h.userId ? userMap.get(h.userId) : h.userName
 
-                if (resolvedName === employeeName && !h.isPaid) {
+                // Match by either resolved name OR original userName to handle name changes
+                // and cases where userId lookup returns undefined
+                const nameMatches = resolvedName === employeeName || h.userName === employeeName
+
+                if (nameMatches && !h.isPaid) {
                     countForThisNote++
                     return { ...h, isPaid: true }
                 }
@@ -455,7 +463,8 @@ export async function payAllEmployee(employeeName: string) {
                         if (note) {
                             const updatedHistory = note.history.map((h: any) => {
                                 const resolvedName = h.userId ? userMap.get(h.userId) : h.userName
-                                if (resolvedName === employeeName && !h.isPaid) {
+                                const nameMatches = resolvedName === employeeName || h.userName === employeeName
+                                if (nameMatches && !h.isPaid) {
                                     return { ...h, isPaid: true, employeePaymentId: empPayment.id }
                                 }
                                 return h
@@ -501,7 +510,8 @@ export async function payAllEmployee(employeeName: string) {
             let changed = false
             const updatedHistory = note.history.map((h: any) => {
                 const resolvedName = h.userId ? userMap.get(h.userId) : h.userName
-                if (resolvedName === employeeName && !h.isPaid) {
+                const nameMatches = resolvedName === employeeName || h.userName === employeeName
+                if (nameMatches && !h.isPaid) {
                     changed = true
                     return { ...h, isPaid: true }
                 }

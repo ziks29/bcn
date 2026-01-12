@@ -14,7 +14,12 @@ export default async function NotificationsPage() {
     const role = (session.user as any)?.role || "USER"
 
     const rawNotifications = await prisma.notification.findMany({
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: 'desc' },
+        include: {
+            order: {
+                select: { totalPrice: true }
+            }
+        }
     })
 
     const notifications = rawNotifications.map(n => ({
@@ -27,7 +32,8 @@ export default async function NotificationsPage() {
         })),
         createdAt: n.createdAt.toISOString(),
         updatedAt: n.updatedAt.toISOString(),
-        id: n.id
+        id: n.id,
+        price: n.order?.totalPrice // Get price from linked Order
     }))
 
     return <NotificationsClient userName={session.user.name || "Сотрудник"} userRole={role} initialData={notifications} />

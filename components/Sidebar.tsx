@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { STOCKS } from '../constants';
 import { Ad } from '../types';
 import { TrendingUp, TrendingDown, Sparkles, Loader2 } from 'lucide-react';
-import { generate2026NewYearWish } from '../services/geminiService';
+import { generateRedneckWisdom } from '../services/geminiService';
 import CensusWidget from './CensusWidget';
 
 interface SidebarProps {
@@ -17,7 +17,7 @@ const Sidebar: React.FC<SidebarProps> = ({ ads }) => {
 
   // Check localStorage on mount
   React.useEffect(() => {
-    const savedData = localStorage.getItem('bcn_gemini_wisdom_2026');
+    const savedData = localStorage.getItem('bcn_gemini_wisdom');
     if (savedData) {
       const { text, timestamp, count } = JSON.parse(savedData);
       const now = new Date().getTime();
@@ -32,7 +32,7 @@ const Sidebar: React.FC<SidebarProps> = ({ ads }) => {
           setCanRequest(false);
         }
       } else {
-        localStorage.removeItem('bcn_gemini_wisdom_2026');
+        localStorage.removeItem('bcn_gemini_wisdom');
         setDailyCount(0);
       }
     }
@@ -40,12 +40,12 @@ const Sidebar: React.FC<SidebarProps> = ({ ads }) => {
 
   const handleGetWisdom = async () => {
     setLoadingWisdom(true);
-    const result = await generate2026NewYearWish();
+    const result = await generateRedneckWisdom();
     const now = new Date().getTime();
 
     // Determine timestamp: use existing start of day or set new if it's the first
     let startTime = now;
-    const savedData = localStorage.getItem('bcn_gemini_wisdom_2026');
+    const savedData = localStorage.getItem('bcn_gemini_wisdom');
     if (savedData) {
       const parsed = JSON.parse(savedData);
       // If still within 24h window, keep the original start time
@@ -62,7 +62,7 @@ const Sidebar: React.FC<SidebarProps> = ({ ads }) => {
       timestamp: startTime,
       count: newCount
     };
-    localStorage.setItem('bcn_gemini_wisdom_2026', JSON.stringify(dataToSave));
+    localStorage.setItem('bcn_gemini_wisdom', JSON.stringify(dataToSave));
 
     setWisdom(result);
     setDailyCount(newCount);
@@ -105,7 +105,7 @@ const Sidebar: React.FC<SidebarProps> = ({ ads }) => {
         <div className="absolute top-0 right-0 p-4 opacity-10">
           <Sparkles size={100} />
         </div>
-        <h3 className="font-newspaper text-2xl mb-2 relative z-10 text-yellow-500">Пророчества 2026</h3>
+        <h3 className="font-newspaper text-2xl mb-2 relative z-10 text-yellow-500">Мудрость Мадам Назар</h3>
         <p className="text-xs font-serif-body text-zinc-400 mb-4 relative z-10">
           Мадам Назар видит грядущее...
         </p>

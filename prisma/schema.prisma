@@ -26,6 +26,8 @@ model User {
   paymentsReceived   Payment[]     @relation("PaymentReceiver")
   employeePaymentsProcessed EmployeePayment[] @relation("EmployeePaymentProcessor")
   transactionsCreated Transaction[] @relation("TransactionCreator")
+  notes          Note[]
+  noteCategories NoteCategory[]
 }
 
 model Article {
@@ -271,4 +273,48 @@ model Transaction {
   @@index([createdById])
   @@index([orderId])
   @@index([employeePaymentId])
+}
+
+model Note {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  content     String
+  color       String    @default("#fef3c7")
+  
+  // Position & Size on canvas
+  posX        Float     @default(100)
+  posY        Float     @default(100)
+  width       Float     @default(250)
+  height      Float     @default(200)
+  
+  // Organization
+  isPinned    Boolean   @default(false)
+  isArchived  Boolean   @default(false)
+  categoryId  String?   @db.ObjectId
+  category    NoteCategory? @relation(fields: [categoryId], references: [id])
+  
+  // Reminder
+  reminderDate DateTime?
+  
+  // Ownership
+  userId      String    @db.ObjectId
+  user        User      @relation(fields: [userId], references: [id])
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@index([userId])
+  @@index([isArchived])
+}
+
+model NoteCategory {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  color     String   @default("#6b7280")
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  notes     Note[]
+  createdAt DateTime @default(now())
+  
+  @@index([userId])
 }
