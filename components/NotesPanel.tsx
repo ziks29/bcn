@@ -271,7 +271,7 @@ export default function NotesPanel({ isOpen, onClose }: NotesPanelProps) {
     };
 
     // Update position (save to localStorage for device-specific positioning)
-    const handlePositionChange = async (id: string, x: number, y: number) => {
+    const handlePositionChange = (id: string, x: number, y: number) => {
         const prevNotes = notes;
         const note = notes.find(n => n.id === id);
         
@@ -294,7 +294,7 @@ export default function NotesPanel({ isOpen, onClose }: NotesPanelProps) {
     };
 
     // Update size (save to localStorage for device-specific sizing)
-    const handleSizeChange = async (id: string, width: number, height: number) => {
+    const handleSizeChange = (id: string, width: number, height: number) => {
         const prevNotes = notes;
         const note = notes.find(n => n.id === id);
         
