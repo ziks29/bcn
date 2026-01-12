@@ -209,7 +209,7 @@ export default function NotesPanel({ isOpen, onClose }: NotesPanelProps) {
             });
             
             // Save position to localStorage for this device
-            if (createdNote && data.posX !== undefined && data.posY !== undefined && data.width !== undefined && data.height !== undefined) {
+            if (createdNote?.id && data.posX !== undefined && data.posY !== undefined && data.width !== undefined && data.height !== undefined) {
                 saveLocalPosition(createdNote.id, data.posX, data.posY, data.width, data.height);
             }
             
