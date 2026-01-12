@@ -99,6 +99,9 @@ docker-compose down
 - **Article Management**: Full CRUD operations with a rich text editor.
 - **Ad System**: Manage dynamic advertisements across the site.
 - **Profile Management**: Update biographic info and display names.
+- **Sticky Notes**: Personal notes with a hybrid storage model:
+  - **User-specific data** (content, color, categories, reminders): Syncs across all devices
+  - **Device-specific data** (positions, sizes, visibility): Unique per device for optimal layout
 
 ## 📦 Project Structure
 

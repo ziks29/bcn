@@ -29,3 +29,4 @@ dist-ssr
 
 .env
 dev.db
+*.tsbuildinfo

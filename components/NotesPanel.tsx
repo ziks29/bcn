@@ -1,5 +1,16 @@
 "use client";
 
+/**
+ * NotesPanel - Sticky Notes Management
+ * 
+ * This component implements a hybrid storage model:
+ * - User-specific data (content, color, categories, reminders): Stored in database, syncs across devices
+ * - Device-specific data (positions, sizes, visibility): Stored in localStorage, unique per device
+ * 
+ * This allows users to have the same notes on all devices, but arrange them differently
+ * on each device based on screen size and personal preference.
+ */
+
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
     X,
@@ -18,8 +29,6 @@ import {
     createNote,
     updateNote,
     deleteNote,
-    updateNotePosition,
-    updateNoteSize,
     getNoteCategories,
     createNoteCategory,
     deleteNoteCategory,
@@ -77,6 +86,38 @@ export default function NotesPanel({ isOpen, onClose }: NotesPanelProps) {
     const [showNotesList, setShowNotesList] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
 
+    // Load device-specific closed notes from localStorage
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const stored = localStorage.getItem('closedNotes');
+            if (stored) {
+                setClosedNoteIds(new Set(JSON.parse(stored)));
+            }
+        }
+    }, []);
+
+    // Save device-specific closed notes to localStorage
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('closedNotes', JSON.stringify(Array.from(closedNoteIds)));
+        }
+    }, [closedNoteIds]);
+
+    // Load device-specific positions from localStorage
+    const loadLocalPositions = useCallback(() => {
+        if (typeof window === 'undefined') return {};
+        const stored = localStorage.getItem('notePositions');
+        return stored ? JSON.parse(stored) : {};
+    }, []);
+
+    // Save device-specific positions to localStorage
+    const saveLocalPosition = useCallback((noteId: string, posX: number, posY: number, width: number, height: number) => {
+        if (typeof window === 'undefined') return;
+        const positions = loadLocalPositions();
+        positions[noteId] = { posX, posY, width, height };
+        localStorage.setItem('notePositions', JSON.stringify(positions));
+    }, [loadLocalPositions]);
+
     // Load notes and categories
     const loadData = useCallback(async (silent = false) => {
         try {
@@ -88,14 +129,31 @@ export default function NotesPanel({ isOpen, onClose }: NotesPanelProps) {
                 }),
                 getNoteCategories(),
             ]);
-            setNotes(notesData as Note[]);
+            
+            // Merge server data with local positions (device-specific)
+            const localPositions = loadLocalPositions();
+            const notesWithLocalPositions = (notesData as Note[]).map(note => {
+                const localPos = localPositions[note.id];
+                if (localPos) {
+                    return {
+                        ...note,
+                        posX: localPos.posX,
+                        posY: localPos.posY,
+                        width: localPos.width,
+                        height: localPos.height,
+                    };
+                }
+                return note;
+            });
+            
+            setNotes(notesWithLocalPositions);
             setCategories(categoriesData as Category[]);
         } catch (error) {
             console.error("Failed to load notes:", error);
         } finally {
             if (!silent) setLoading(false);
         }
-    }, [selectedCategory, searchQuery]);
+    }, [selectedCategory, searchQuery, loadLocalPositions]);
 
     useEffect(() => {
         if (isOpen) {
@@ -140,7 +198,7 @@ export default function NotesPanel({ isOpen, onClose }: NotesPanelProps) {
     // Save new note (inline creation)
     const handleSaveNewNote = async (data: Partial<Note>) => {
         try {
-            await createNote({
+            const createdNote = await createNote({
                 title: data.title || "Без заголовка",
                 content: data.content || "",
                 color: data.color,
@@ -149,6 +207,12 @@ export default function NotesPanel({ isOpen, onClose }: NotesPanelProps) {
                 width: data.width,
                 height: data.height,
             });
+            
+            // Save position to localStorage for this device
+            if (createdNote && data.posX !== undefined && data.posY !== undefined && data.width !== undefined && data.height !== undefined) {
+                saveLocalPosition(createdNote.id, data.posX, data.posY, data.width, data.height);
+            }
+            
             setNewNote(null);
             loadData(true); // Silent reload
         } catch (error) {
@@ -199,27 +263,35 @@ export default function NotesPanel({ isOpen, onClose }: NotesPanelProps) {
         }
     };
 
-    // Update position
+    // Update position (save to localStorage for device-specific positioning)
     const handlePositionChange = async (id: string, x: number, y: number) => {
         try {
             // Optimistic update
             setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, posX: x, posY: y } : n)));
-            await updateNotePosition(id, x, y);
+            
+            // Save to localStorage (device-specific)
+            const note = notes.find(n => n.id === id);
+            if (note) {
+                saveLocalPosition(id, x, y, note.width, note.height);
+            }
         } catch (error) {
             console.error("Failed to update position:", error);
-            loadData(true); // Revert silently
         }
     };
 
-    // Update size
+    // Update size (save to localStorage for device-specific sizing)
     const handleSizeChange = async (id: string, width: number, height: number) => {
         try {
             // Optimistic update
             setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, width, height } : n)));
-            await updateNoteSize(id, width, height);
+            
+            // Save to localStorage (device-specific)
+            const note = notes.find(n => n.id === id);
+            if (note) {
+                saveLocalPosition(id, note.posX, note.posY, width, height);
+            }
         } catch (error) {
             console.error("Failed to update size:", error);
-            loadData(true); // Revert silently
         }
     };
 
