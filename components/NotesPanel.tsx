@@ -209,8 +209,14 @@ export default function NotesPanel({ isOpen, onClose }: NotesPanelProps) {
             });
             
             // Save position to localStorage for this device
-            if (createdNote?.id && data.posX !== undefined && data.posY !== undefined && data.width !== undefined && data.height !== undefined) {
-                saveLocalPosition(createdNote.id, data.posX, data.posY, data.width, data.height);
+            const hasValidPosition = createdNote?.id && 
+                typeof data.posX === 'number' && 
+                typeof data.posY === 'number' && 
+                typeof data.width === 'number' && 
+                typeof data.height === 'number';
+            
+            if (hasValidPosition) {
+                saveLocalPosition(createdNote.id, data.posX!, data.posY!, data.width!, data.height!);
             }
             
             setNewNote(null);
@@ -265,6 +271,7 @@ export default function NotesPanel({ isOpen, onClose }: NotesPanelProps) {
 
     // Update position (save to localStorage for device-specific positioning)
     const handlePositionChange = async (id: string, x: number, y: number) => {
+        const prevNotes = notes;
         try {
             // Optimistic update
             setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, posX: x, posY: y } : n)));
@@ -276,11 +283,14 @@ export default function NotesPanel({ isOpen, onClose }: NotesPanelProps) {
             }
         } catch (error) {
             console.error("Failed to update position:", error);
+            // Revert optimistic update on failure
+            setNotes(prevNotes);
         }
     };
 
     // Update size (save to localStorage for device-specific sizing)
     const handleSizeChange = async (id: string, width: number, height: number) => {
+        const prevNotes = notes;
         try {
             // Optimistic update
             setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, width, height } : n)));
@@ -292,6 +302,8 @@ export default function NotesPanel({ isOpen, onClose }: NotesPanelProps) {
             }
         } catch (error) {
             console.error("Failed to update size:", error);
+            // Revert optimistic update on failure
+            setNotes(prevNotes);
         }
     };
 
