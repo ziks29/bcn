@@ -209,14 +209,15 @@ export default function NotesPanel({ isOpen, onClose }: NotesPanelProps) {
             });
             
             // Save position to localStorage for this device
-            const hasValidPosition = createdNote?.id && 
+            if (
+                createdNote?.id && 
                 typeof data.posX === 'number' && 
                 typeof data.posY === 'number' && 
                 typeof data.width === 'number' && 
-                typeof data.height === 'number';
-            
-            if (hasValidPosition) {
-                saveLocalPosition(createdNote.id, data.posX!, data.posY!, data.width!, data.height!);
+                typeof data.height === 'number'
+            ) {
+                // TypeScript now knows these are numbers within this block
+                saveLocalPosition(createdNote.id, data.posX, data.posY, data.width, data.height);
             }
             
             setNewNote(null);
@@ -272,15 +273,19 @@ export default function NotesPanel({ isOpen, onClose }: NotesPanelProps) {
     // Update position (save to localStorage for device-specific positioning)
     const handlePositionChange = async (id: string, x: number, y: number) => {
         const prevNotes = notes;
+        const note = notes.find(n => n.id === id);
+        
+        if (!note) {
+            console.error("Note not found for position update");
+            return;
+        }
+        
         try {
             // Optimistic update
             setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, posX: x, posY: y } : n)));
             
-            // Save to localStorage (device-specific)
-            const note = notes.find(n => n.id === id);
-            if (note) {
-                saveLocalPosition(id, x, y, note.width, note.height);
-            }
+            // Save to localStorage (device-specific) using current dimensions
+            saveLocalPosition(id, x, y, note.width, note.height);
         } catch (error) {
             console.error("Failed to update position:", error);
             // Revert optimistic update on failure
@@ -291,15 +296,19 @@ export default function NotesPanel({ isOpen, onClose }: NotesPanelProps) {
     // Update size (save to localStorage for device-specific sizing)
     const handleSizeChange = async (id: string, width: number, height: number) => {
         const prevNotes = notes;
+        const note = notes.find(n => n.id === id);
+        
+        if (!note) {
+            console.error("Note not found for size update");
+            return;
+        }
+        
         try {
             // Optimistic update
             setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, width, height } : n)));
             
-            // Save to localStorage (device-specific)
-            const note = notes.find(n => n.id === id);
-            if (note) {
-                saveLocalPosition(id, note.posX, note.posY, width, height);
-            }
+            // Save to localStorage (device-specific) using current position
+            saveLocalPosition(id, note.posX, note.posY, width, height);
         } catch (error) {
             console.error("Failed to update size:", error);
             // Revert optimistic update on failure
