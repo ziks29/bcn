@@ -8,8 +8,8 @@ const mapPrismaArticle = (item: any): Article => ({
     title: item.title,
     excerpt: item.excerpt,
     content: item.content,
-    author: item.authorDisplay || item.author.username,
-    authorBio: item.author.bio,
+    author: item.authorDisplay || item.author?.username || "Unknown",
+    authorBio: item.author?.bio,
     date: item.createdAt.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' }),
     category: item.category as any, // Cast to enum
     imageUrl: item.image || undefined,
