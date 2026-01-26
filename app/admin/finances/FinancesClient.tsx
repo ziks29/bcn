@@ -81,45 +81,58 @@ export default function FinancesClient({
     const [typeFilter, setTypeFilter] = useState('ALL')
     const [startDate, setStartDate] = useState('')
     const [endDate, setEndDate] = useState('')
+    const [statsPeriod, setStatsPeriod] = useState<'WEEK' | 'MONTH'>('WEEK')
 
     const isAdmin = ['ADMIN', 'CHIEF_EDITOR'].includes(userRole)
 
     // Calculate statistics
     const stats = useMemo(() => {
+        // Balace is always lifetime
         const totalPayments = payments.reduce((sum, p) => sum + p.amount, 0)
-        const totalIncome = transactions
+        const totalIncomeLifetime = transactions
             .filter(t => t.type === 'INCOME')
             .reduce((sum, t) => sum + t.amount, 0)
-        const totalExpenses = transactions
+        const totalExpensesLifetime = transactions
             .filter(t => t.type === 'EXPENSE')
             .reduce((sum, t) => sum + t.amount, 0)
 
-        const totalRevenue = totalPayments + totalIncome
-        const balance = totalRevenue - totalExpenses
+        const totalRevenueLifetime = totalPayments + totalIncomeLifetime
+        const balance = totalRevenueLifetime - totalExpensesLifetime
 
-        // This month stats
+        // Period calculations
         const now = new Date()
-        const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+        let periodStart = new Date()
 
-        const thisMonthPayments = payments
-            .filter(p => new Date(p.paymentDate) >= thisMonthStart)
+        if (statsPeriod === 'MONTH') {
+            periodStart = new Date(now.getFullYear(), now.getMonth(), 1)
+        } else {
+            // Monday of current week
+            const day = now.getDay()
+            const diff = now.getDate() - day + (day === 0 ? -6 : 1) // adjust when day is sunday
+            periodStart = new Date(now.setDate(diff))
+            periodStart.setHours(0, 0, 0, 0)
+        }
+
+        const periodPayments = payments
+            .filter(p => new Date(p.paymentDate) >= periodStart)
             .reduce((sum, p) => sum + p.amount, 0)
-        const thisMonthIncome = transactions
-            .filter(t => t.type === 'INCOME' && new Date(t.date) >= thisMonthStart)
+        const periodIncome = transactions
+            .filter(t => t.type === 'INCOME' && new Date(t.date) >= periodStart)
             .reduce((sum, t) => sum + t.amount, 0)
-        const thisMonthExpenses = transactions
-            .filter(t => t.type === 'EXPENSE' && new Date(t.date) >= thisMonthStart)
+        const periodExpenses = transactions
+            .filter(t => t.type === 'EXPENSE' && new Date(t.date) >= periodStart)
             .reduce((sum, t) => sum + t.amount, 0)
 
-        const thisMonthProfit = (thisMonthPayments + thisMonthIncome) - thisMonthExpenses
+        const periodRevenue = periodPayments + periodIncome
+        const periodProfit = periodRevenue - periodExpenses
 
         return {
             balance,
-            totalRevenue,
-            totalExpenses,
-            thisMonthProfit
+            periodRevenue,
+            periodExpenses,
+            periodProfit
         }
-    }, [payments, transactions])
+    }, [payments, transactions, statsPeriod])
 
     // Filter and combine transactions and payments
     const allEntries = useMemo(() => {
@@ -354,23 +367,56 @@ export default function FinancesClient({
                 {/* Stats Cards */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                     <div className="bg-white border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                        <div className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Баланс</div>
+                        <div className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Баланс (Всего)</div>
                         <div className={`font-headline text-2xl font-bold ${stats.balance >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                             {formatCurrency(stats.balance)}
                         </div>
                     </div>
-                    <div className="bg-white border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                        <div className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Доход всего</div>
-                        <div className="font-headline text-2xl font-bold text-emerald-600">{formatCurrency(stats.totalRevenue)}</div>
+                    <div
+                        className="bg-white border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:bg-zinc-50 transition-colors group relative"
+                        onClick={() => setStatsPeriod(prev => prev === 'WEEK' ? 'MONTH' : 'WEEK')}
+                    >
+                        <div className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1 flex items-center gap-1">
+                            Доход
+                            <span className="text-black underline decoration-dashed underline-offset-2">
+                                {statsPeriod === 'WEEK' ? 'за неделю' : 'за месяц'}
+                            </span>
+                        </div>
+                        <div className="font-headline text-2xl font-bold text-emerald-600">{formatCurrency(stats.periodRevenue)}</div>
+                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] text-zinc-400 uppercase font-bold">
+                            Сменить период
+                        </div>
                     </div>
-                    <div className="bg-white border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                        <div className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Расходы всего</div>
-                        <div className="font-headline text-2xl font-bold text-red-600">{formatCurrency(stats.totalExpenses)}</div>
+                    <div
+                        className="bg-white border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:bg-zinc-50 transition-colors group relative"
+                        onClick={() => setStatsPeriod(prev => prev === 'WEEK' ? 'MONTH' : 'WEEK')}
+                    >
+                        <div className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1 flex items-center gap-1">
+                            Расходы
+                            <span className="text-black underline decoration-dashed underline-offset-2">
+                                {statsPeriod === 'WEEK' ? 'за неделю' : 'за месяц'}
+                            </span>
+                        </div>
+                        <div className="font-headline text-2xl font-bold text-red-600">{formatCurrency(stats.periodExpenses)}</div>
+                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] text-zinc-400 uppercase font-bold">
+                            Сменить период
+                        </div>
                     </div>
-                    <div className="bg-white border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                        <div className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Прибыль за месяц</div>
-                        <div className={`font-headline text-2xl font-bold ${stats.thisMonthProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                            {formatCurrency(stats.thisMonthProfit)}
+                    <div
+                        className="bg-white border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:bg-zinc-50 transition-colors group relative"
+                        onClick={() => setStatsPeriod(prev => prev === 'WEEK' ? 'MONTH' : 'WEEK')}
+                    >
+                        <div className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1 flex items-center gap-1">
+                            Прибыль
+                            <span className="text-black underline decoration-dashed underline-offset-2">
+                                {statsPeriod === 'WEEK' ? 'за неделю' : 'за месяц'}
+                            </span>
+                        </div>
+                        <div className={`font-headline text-2xl font-bold ${stats.periodProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                            {formatCurrency(stats.periodProfit)}
+                        </div>
+                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] text-zinc-400 uppercase font-bold">
+                            Сменить период
                         </div>
                     </div>
                 </div>
