@@ -65,8 +65,8 @@ export default async function ServicesPage() {
                                 <span className="font-bold text-[#4b3634]">от 4 000$</span>
                             </li>
                             <li className="flex justify-between items-center border-b border-zinc-100 pb-2">
-                                <span className="font-medium">Фотосъёмка</span>
-                                <span className="font-bold text-[#4b3634]">от 5 000$/час</span>
+                                <span className="font-medium">Фотосессия</span>
+                                <span className="font-bold text-[#4b3634]">от 6 500$</span>
                             </li>
                             <li className="flex justify-between items-center border-b border-zinc-100 pb-2">
                                 <span className="font-medium">Обработка фото</span>
@@ -74,7 +74,7 @@ export default async function ServicesPage() {
                             </li>
                             <li className="flex justify-between items-center border-b border-zinc-100 pb-2">
                                 <span className="font-medium">Графический дизайн</span>
-                                <span className="font-bold text-[#4b3634]">от 2 000$</span>
+                                <span className="font-bold text-[#4b3634]">от 2 500$</span>
                             </li>
                             <li className="flex justify-between items-center">
                                 <span className="font-medium">Креативный копирайтинг</span>
@@ -92,11 +92,15 @@ export default async function ServicesPage() {
                         <ul className="space-y-3">
                             <li className="flex justify-between items-center border-b border-zinc-100 pb-2">
                                 <span className="font-medium">Съемка/Монтаж</span>
-                                <span className="font-bold text-[#4b3634]">от 2 200$</span>
+                                <span className="font-bold text-[#4b3634]">от 4 000$</span>
+                            </li>
+                            <li className="flex justify-between items-center border-b border-zinc-100 pb-2">
+                                <span className="font-medium">Заказное интервью</span>
+                                <span className="font-bold text-[#4b3634]">от 2 500$</span>
                             </li>
                             <li className="flex justify-between items-center">
-                                <span className="font-medium">Интервью / репортаж / реклама</span>
-                                <span className="font-bold text-[#4b3634]">от 1 000$</span>
+                                <span className="font-medium">Заказной репортаж</span>
+                                <span className="font-bold text-[#4b3634]">от 2 500$</span>
                             </li>
                         </ul>
                     </div>
@@ -113,12 +117,16 @@ export default async function ServicesPage() {
                                 <span className="font-bold text-[#4b3634]">от 1 000$</span>
                             </li>
                             <li className="flex justify-between items-center border-b border-zinc-100 pb-2">
+                                <span className="font-medium">Реклама на портале</span>
+                                <span className="font-bold text-[#4b3634]">2 000$</span>
+                            </li>
+                            <li className="flex justify-between items-center border-b border-zinc-100 pb-2">
                                 <span className="font-medium">Упоминание в видео/репортаже</span>
                                 <span className="font-bold text-[#4b3634]">от 2 000$</span>
                             </li>
                             <li className="flex justify-between items-center border-b border-zinc-100 pb-2">
                                 <span className="font-medium">Рассылки от агентства</span>
-                                <span className="font-bold text-[#4b3634]">от 50$</span>
+                                <span className="font-bold text-[#4b3634]">65$</span>
                             </li>
                             <li className="flex justify-between items-center border-b border-zinc-100 pb-2">
                                 <span className="font-medium">Печать меню</span>

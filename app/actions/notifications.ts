@@ -117,7 +117,7 @@ export async function createNotification(data: {
         await prisma.notification.create({
             data: {
                 ...notificationData,
-                employeeRate: employeeRate !== undefined ? employeeRate : 42.5,
+                employeeRate: employeeRate !== undefined ? employeeRate : 52,
                 authorId: authorId,
                 history: [],
                 orderId: orderId
@@ -374,7 +374,7 @@ export async function payAllEmployee(employeeName: string) {
 
             if (countForThisNote > 0) {
                 // Use per-notification rate, fallback to global default 42.5
-                const rate = note.employeeRate ?? 42.5
+                const rate = note.employeeRate ?? 52
                 const amount = countForThisNote * rate
 
                 totalPaidAmount += amount

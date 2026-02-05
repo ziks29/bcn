@@ -117,7 +117,7 @@ model Notification {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   isArchived Boolean @default(false)
-  employeeRate Float @default(42.5) // Default payout per send for employee
+  employeeRate Float @default(52) // Default payout per send for employee
   
   authorId  String?  @db.ObjectId
   authorUser User?   @relation(fields: [authorId], references: [id])

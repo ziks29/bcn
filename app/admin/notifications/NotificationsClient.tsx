@@ -139,20 +139,20 @@ export default function NotificationsClient({
 
     const totalEarned = notifications.reduce((sum, n) => {
         const count = n.history?.filter(h => h.userName === userName).length || 0
-        const rate = n.employeeRate ?? 42.5
+        const rate = n.employeeRate ?? 52
         return sum + (count * rate)
     }, 0)
 
     const totalPaid = notifications.reduce((sum, n) => {
         const count = n.history?.filter(h => h.userName === userName && h.isPaid).length || 0
-        const rate = n.employeeRate ?? 42.5
+        const rate = n.employeeRate ?? 52
         return sum + (count * rate)
     }, 0)
 
     // Calculate Payout Stats for Admins
     const payoutStats = notifications.reduce((acc, note) => {
         if (!note.history) return acc
-        const rate = note.employeeRate ?? 42.5
+        const rate = note.employeeRate ?? 52
 
         note.history.forEach(h => {
             if (!h.isPaid) {
@@ -484,7 +484,7 @@ export default function NotificationsClient({
 
                         <button
                             onClick={() => {
-                                setCurrentNotification({ employeeRate: 42.5 })
+                                setCurrentNotification({ employeeRate: 52 })
                                 setIsEditing(true)
                             }}
                             className="bg-black text-white px-6 py-3 font-bold uppercase hover:bg-zinc-800 transition-colors text-sm sm:text-base"
@@ -653,7 +653,7 @@ export default function NotificationsClient({
                                             value={currentNotification.employeeRate !== undefined ? currentNotification.employeeRate : ""}
                                             onChange={e => setCurrentNotification({ ...currentNotification, employeeRate: e.target.value === "" ? undefined : parseFloat(e.target.value) })}
                                             className="w-full border-2 border-black p-2 font-serif focus:outline-none focus:ring-2 focus:ring-pink-500"
-                                            placeholder="По умолчанию 42.5"
+                                            placeholder="По умолчанию 52"
                                         />
                                         <p className="text-[10px] text-zinc-500 mt-1 leading-tight">
                                             Сколько получит сотрудник за одну отправку.
