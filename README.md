@@ -65,12 +65,6 @@ See [DEPLOY.md](DEPLOY.md) for the full deployment guide.
 
 5. **Open** [http://localhost:3000](http://localhost:3000)
 
-### Default Admin Credentials
-- **Username**: `admin`
-- **Password**: `admin123`
-
-⚠️ *Change these immediately in production!*
-
 ## 🐳 Docker Development
 
 For running the entire stack (App + Postgres) locally via Docker:
