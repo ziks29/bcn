@@ -10,6 +10,7 @@ COPY package.json pnpm-lock.yaml* package-lock.json* ./
 RUN if [ -f pnpm-lock.yaml ]; then \
     corepack enable && \
     corepack prepare pnpm@latest --activate && \
+    pnpm config set ignore-scripts false && \
     pnpm install --frozen-lockfile; \
     else \
     npm ci; \
