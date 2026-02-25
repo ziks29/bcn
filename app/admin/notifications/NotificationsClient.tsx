@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Copy, Send, Pencil, Trash2, Clock, Check, DollarSign, Archive, ArchiveRestore, ChevronDown, ChevronUp } from "lucide-react"
+import { Copy, Send, Pencil, Trash2, Clock, Check, DollarSign, Archive, ArchiveRestore, ChevronDown, ChevronUp, Filter, ArrowUpDown } from "lucide-react"
 import { toast } from "sonner"
 import {
     createNotification,
@@ -38,6 +38,7 @@ interface Notification {
     price?: number
     employeeRate?: number
     orderId?: string | null
+    createdAt: string
 }
 
 function getSentToday(history: SendGeneric[]) {
@@ -124,6 +125,8 @@ export default function NotificationsClient({
         data: null
     })
     const [isArchiveOpen, setIsArchiveOpen] = useState(false)
+    const [sortBy, setSortBy] = useState<"time" | "customer" | "created">("time")
+    const [filterActiveMSK, setFilterActiveMSK] = useState(false)
 
     // Sync state with prop updates (from server revalidation)
     useEffect(() => {
@@ -350,6 +353,34 @@ export default function NotificationsClient({
         return quantity * diffDays
     }
 
+    // MSK Time helper (Moscow is UTC+3)
+    const isCurrentlyActiveMSK = (note: Notification) => {
+        const now = new Date()
+
+        // Moscow is UTC+3. Use Intl for reliable extraction regardless of local system time.
+        const mskDateStr = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Europe/Moscow',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        }).format(now) // YYYY-MM-DD
+
+        const mskTimeStr = new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'Europe/Moscow',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        }).format(now) // HH:mm
+
+        const dateInRange = mskDateStr >= note.startDate && mskDateStr <= note.endDate
+
+        const timeInRange = note.startTime <= note.endTime
+            ? (mskTimeStr >= note.startTime && mskTimeStr <= note.endTime)
+            : (mskTimeStr >= note.startTime || mskTimeStr <= note.endTime)
+
+        return dateInRange && timeInRange
+    }
+
     return (
         <div className="min-h-screen bg-[#f4f1ea] p-4 md:p-8 font-serif-body">
 
@@ -459,7 +490,7 @@ export default function NotificationsClient({
                 </div>
             )}
 
-            <div className="max-w-4xl mx-auto">
+            <div className="w-full mx-auto">
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-8 border-b-2 border-black pb-4">
                     <div>
@@ -492,6 +523,45 @@ export default function NotificationsClient({
                             + Создать
                         </button>
                     </div>
+                </div>
+
+                {/* Filters and Sorting */}
+                <div className="flex flex-wrap items-center gap-4 mb-8">
+                    <div className="flex items-center gap-2 bg-white border-2 border-black p-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                        <button
+                            onClick={() => setSortBy("time")}
+                            className={`px-3 py-1 text-xs font-bold uppercase transition-colors ${sortBy === 'time' ? 'bg-black text-white' : 'hover:bg-zinc-100'}`}
+                        >
+                            По времени
+                        </button>
+                        <button
+                            onClick={() => setSortBy("customer")}
+                            className={`px-3 py-1 text-xs font-bold uppercase transition-colors ${sortBy === 'customer' ? 'bg-black text-white' : 'hover:bg-zinc-100'}`}
+                        >
+                            По клиенту
+                        </button>
+                        <button
+                            onClick={() => setSortBy("created")}
+                            className={`px-3 py-1 text-xs font-bold uppercase transition-colors ${sortBy === 'created' ? 'bg-black text-white' : 'hover:bg-zinc-100'}`}
+                        >
+                            По созданию
+                        </button>
+                    </div>
+
+                    <button
+                        onClick={() => setFilterActiveMSK(!filterActiveMSK)}
+                        className={`flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all active:translate-y-[1px] active:shadow-none ${filterActiveMSK ? 'bg-pink-600 text-white' : 'bg-white text-black hover:bg-zinc-100'
+                            }`}
+                    >
+                        <Filter size={14} />
+                        Показать только активные
+                    </button>
+
+                    {filterActiveMSK && (
+                        <span className="text-[10px] font-bold uppercase text-pink-600 animate-pulse">
+                            • Фильтр активен
+                        </span>
+                    )}
                 </div>
 
                 {/* Payouts Summary (Inline) */}
@@ -693,161 +763,169 @@ export default function NotificationsClient({
                 )}
 
                 {/* List */}
-                <div className="grid gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {notifications.filter(n => !n.isArchived).length === 0 ? (
                         <p className="text-zinc-500 italic text-center py-8">Нет активных рассылок.</p>
                     ) : (
-                        notifications.filter(n => !n.isArchived).map(note => (
-                            <div key={note.id} className="bg-white border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[-2px] hover:translate-x-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all flex flex-col">
-                                <div className="flex flex-col flex-1">
-                                    {/* Header: Compact */}
-                                    <div className="flex flex-wrap items-center justify-between gap-y-2 gap-x-4 mb-3 pb-3 border-b border-zinc-100">
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            <span className="bg-pink-100 text-pink-800 px-2 py-0.5 text-xs font-bold uppercase border border-pink-200">
-                                                {note.customer}
-                                            </span>
-                                            <div className="flex items-center gap-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-zinc-400">
-                                                <span className="hidden sm:inline">|</span>
-                                                <span>{formatDate(note.startDate)} — {formatDate(note.endDate)}</span>
-                                                <span className="hidden sm:inline text-zinc-300">/</span>
-                                                <span className="text-zinc-500">{note.startTime} — {note.endTime}</span>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-zinc-400">
-                                                by {note.author}
-                                            </span>
-                                            {note.lastSentTime && (
-                                                <div className="border-l border-zinc-300 pl-2">
-                                                    <TimeSince date={note.lastSentTime} />
+                        notifications
+                            .filter(n => !n.isArchived)
+                            .filter(n => filterActiveMSK ? isCurrentlyActiveMSK(n) : true)
+                            .sort((a, b) => {
+                                if (sortBy === 'customer') return a.customer.localeCompare(b.customer)
+                                if (sortBy === 'created') return (b.createdAt || "").localeCompare(a.createdAt || "")
+                                return (a.startTime || "").localeCompare(b.startTime || "")
+                            })
+                            .map(note => (
+                                <div key={note.id} className="bg-white border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[-2px] hover:translate-x-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all flex flex-col">
+                                    <div className="flex flex-col flex-1">
+                                        {/* Header: Compact */}
+                                        <div className="flex flex-wrap items-center justify-between gap-y-2 gap-x-4 mb-3 pb-3 border-b border-zinc-100">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <span className="bg-pink-100 text-pink-800 px-2 py-0.5 text-xs font-bold uppercase border border-pink-200">
+                                                    {note.customer}
+                                                </span>
+                                                <div className="flex items-center gap-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-zinc-400">
+                                                    <span className="hidden sm:inline">|</span>
+                                                    <span>{formatDate(note.startDate)} — {formatDate(note.endDate)}</span>
+                                                    <span className="hidden sm:inline text-zinc-300">/</span>
+                                                    <span className="text-zinc-500">{note.startTime} — {note.endTime}</span>
                                                 </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Body: Grid for Desktop */}
-                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-4">
-                                        {/* Left: Ad Text (Taking 2 cols) */}
-                                        <div className="lg:col-span-2">
-                                            <div className="bg-zinc-50 p-3 sm:p-4 border border-zinc-200 rounded-sm h-full">
-                                                <p className="font-serif text-sm sm:text-base text-zinc-900 leading-relaxed whitespace-pre-wrap">{note.adText}</p>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-zinc-400">
+                                                    by {note.author}
+                                                </span>
+                                                {note.lastSentTime && (
+                                                    <div className="border-l border-zinc-300 pl-2">
+                                                        <TimeSince date={note.lastSentTime} />
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
 
-                                        {/* Right: Stats & History (Taking 1 col) */}
-                                        <div className="flex flex-col gap-3">
-                                            <div className="bg-zinc-100 p-2 rounded-sm border border-zinc-200">
-                                                <div className="flex items-center justify-between mb-1">
-                                                    <div className="text-[10px] uppercase font-bold text-zinc-500">Сегодня / Лимит</div>
-                                                    <div className="flex items-baseline gap-1">
-                                                        <span className={`text-xl font-black ${getSentToday(note.history || []) >= note.quantity ? 'text-green-600' : 'text-black'}`}>
-                                                            {getSentToday(note.history || [])}
-                                                        </span>
-                                                        <span className="text-xs font-bold text-zinc-400">/</span>
-                                                        <span className="text-xs font-bold text-zinc-400">{note.quantity}</span>
+                                        {/* Body: Grid for Desktop */}
+                                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-4">
+                                            {/* Left: Ad Text (Taking 2 cols) */}
+                                            <div className="lg:col-span-2">
+                                                <div className="bg-zinc-50 p-3 sm:p-4 border border-zinc-200 rounded-sm h-full">
+                                                    <p className="font-serif text-sm sm:text-base text-zinc-900 leading-relaxed whitespace-pre-wrap">{note.adText}</p>
+                                                </div>
+                                            </div>
 
+                                            {/* Right: Stats & History (Taking 1 col) */}
+                                            <div className="flex flex-col gap-3">
+                                                <div className="bg-zinc-100 p-2 rounded-sm border border-zinc-200">
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <div className="text-[10px] uppercase font-bold text-zinc-500">Сегодня / Лимит</div>
+                                                        <div className="flex items-baseline gap-1">
+                                                            <span className={`text-xl font-black ${getSentToday(note.history || []) >= note.quantity ? 'text-green-600' : 'text-black'}`}>
+                                                                {getSentToday(note.history || [])}
+                                                            </span>
+                                                            <span className="text-xs font-bold text-zinc-400">/</span>
+                                                            <span className="text-xs font-bold text-zinc-400">{note.quantity}</span>
+
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-[10px] font-bold text-zinc-400 text-right">
+                                                        Всего отправлено: {note.sentCount || 0} / {getTotalCampaignLimit(note.quantity, note.startDate, note.endDate)}
                                                     </div>
                                                 </div>
-                                                <div className="text-[10px] font-bold text-zinc-400 text-right">
-                                                    Всего отправлено: {note.sentCount || 0} / {getTotalCampaignLimit(note.quantity, note.startDate, note.endDate)}
-                                                </div>
-                                            </div>
 
-                                            {note.history && note.history.length > 0 && (
-                                                <div className="flex-1 flex flex-col min-h-[0px]">
-                                                    <div className="text-[10px] uppercase font-bold text-zinc-400 mb-1.5">История</div>
-                                                    <div className="flex flex-col gap-1.5 max-h-[150px] lg:max-h-[250px] overflow-y-auto pr-1 custom-scrollbar">
-                                                        {note.history.map((h, i) => (
-                                                            <div
-                                                                key={i}
-                                                                className={`border px-2 py-1.5 flex items-center justify-between gap-2 text-xs transition-colors rounded-sm ${h.isPaid
-                                                                    ? 'bg-emerald-50/50 border-emerald-200'
-                                                                    : 'bg-white border-zinc-200'
-                                                                    }`}
-                                                            >
-                                                                <div className="flex items-center gap-2 min-w-0">
-                                                                    <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${h.isPaid ? 'bg-emerald-400' : 'bg-zinc-300'}`}></div>
-                                                                    <div className="flex flex-col min-w-0">
-                                                                        <span className="font-bold text-zinc-700 truncate">{h.userName}</span>
-                                                                        <span className="font-mono text-zinc-400 text-[9px]"><FormatTime date={h.timestamp} /></span>
+                                                {note.history && note.history.length > 0 && (
+                                                    <div className="flex-1 flex flex-col min-h-[0px]">
+                                                        <div className="text-[10px] uppercase font-bold text-zinc-400 mb-1.5">История</div>
+                                                        <div className="flex flex-col gap-1.5 max-h-[150px] lg:max-h-[250px] overflow-y-auto pr-1 custom-scrollbar">
+                                                            {note.history.map((h, i) => (
+                                                                <div
+                                                                    key={i}
+                                                                    className={`border px-2 py-1.5 flex items-center justify-between gap-2 text-xs transition-colors rounded-sm ${h.isPaid
+                                                                        ? 'bg-emerald-50/50 border-emerald-200'
+                                                                        : 'bg-white border-zinc-200'
+                                                                        }`}
+                                                                >
+                                                                    <div className="flex items-center gap-2 min-w-0">
+                                                                        <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${h.isPaid ? 'bg-emerald-400' : 'bg-zinc-300'}`}></div>
+                                                                        <div className="flex flex-col min-w-0">
+                                                                            <span className="font-bold text-zinc-700 truncate">{h.userName}</span>
+                                                                            <span className="font-mono text-zinc-400 text-[9px]"><FormatTime date={h.timestamp} /></span>
+                                                                        </div>
                                                                     </div>
-                                                                </div>
 
-                                                                {canManagePayouts ? (
-                                                                    <button
-                                                                        onClick={() => togglePayout(note.id, h.timestamp)}
-                                                                        className={`p-1 rounded hover:bg-black/5 transition-colors flex-shrink-0 ${h.isPaid ? 'text-emerald-600' : 'text-zinc-300 hover:text-zinc-500'
-                                                                            }`}
-                                                                    >
-                                                                        {h.isPaid ? <Check size={12} strokeWidth={3} /> : <DollarSign size={12} />}
-                                                                    </button>
-                                                                ) : (
-                                                                    h.isPaid && <Check size={12} className="text-emerald-600 flex-shrink-0" strokeWidth={3} />
-                                                                )}
-                                                            </div>
-                                                        ))}
+                                                                    {canManagePayouts ? (
+                                                                        <button
+                                                                            onClick={() => togglePayout(note.id, h.timestamp)}
+                                                                            className={`p-1 rounded hover:bg-black/5 transition-colors flex-shrink-0 ${h.isPaid ? 'text-emerald-600' : 'text-zinc-300 hover:text-zinc-500'
+                                                                                }`}
+                                                                        >
+                                                                            {h.isPaid ? <Check size={12} strokeWidth={3} /> : <DollarSign size={12} />}
+                                                                        </button>
+                                                                    ) : (
+                                                                        h.isPaid && <Check size={12} className="text-emerald-600 flex-shrink-0" strokeWidth={3} />
+                                                                    )}
+                                                                </div>
+                                                            ))}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            )}
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                {/* Action Footer */}
-                                <div className="mt-auto pt-3 border-t-2 border-zinc-100 flex items-center justify-between gap-2">
-                                    <div className="flex gap-1">
-                                        <button
-                                            onClick={() => copyToClipboard(note.adText)}
-                                            className="p-2 hover:bg-zinc-100 text-zinc-500 hover:text-black transition-colors rounded-md"
-                                            title="Копировать"
-                                        >
-                                            <Copy size={16} />
-                                        </button>
-                                        <button
-                                            onClick={() => startEdit(note)}
-                                            className="p-2 hover:bg-zinc-100 text-zinc-500 hover:text-black transition-colors rounded-md"
-                                            title="Изменить"
-                                        >
-                                            <Pencil size={16} />
-                                        </button>
-                                        {/* Delete Button - Only Admin/Chief or Author */}
-                                        {/* Archive Button for Author/Admin */}
-                                        {(['ADMIN', 'CHIEF_EDITOR'].includes(userRole) || note.author === userName) && (
+                                    {/* Action Footer */}
+                                    <div className="mt-auto pt-3 border-t-2 border-zinc-100 flex items-center justify-between gap-2">
+                                        <div className="flex gap-1">
                                             <button
-                                                onClick={() => toggleArchive(note.id)}
+                                                onClick={() => copyToClipboard(note.adText)}
                                                 className="p-2 hover:bg-zinc-100 text-zinc-500 hover:text-black transition-colors rounded-md"
-                                                title={note.isArchived ? "Разархивировать" : "В архив"}
+                                                title="Копировать"
                                             >
-                                                {note.isArchived ? <ArchiveRestore size={16} /> : <Archive size={16} />}
+                                                <Copy size={16} />
                                             </button>
-                                        )}
-
-                                        {/* Delete Button - Only Admin */}
-                                        {['ADMIN', 'CHIEF_EDITOR'].includes(userRole) && (
                                             <button
-                                                onClick={() => deleteNotification(note.id)}
-                                                className="p-2 hover:bg-red-50 text-zinc-400 hover:text-red-500 transition-colors rounded-md"
-                                                title="Удалить"
+                                                onClick={() => startEdit(note)}
+                                                className="p-2 hover:bg-zinc-100 text-zinc-500 hover:text-black transition-colors rounded-md"
+                                                title="Изменить"
                                             >
-                                                <Trash2 size={16} />
+                                                <Pencil size={16} />
                                             </button>
-                                        )}
-                                    </div>
+                                            {/* Delete Button - Only Admin/Chief or Author */}
+                                            {/* Archive Button for Author/Admin */}
+                                            {(['ADMIN', 'CHIEF_EDITOR'].includes(userRole) || note.author === userName) && (
+                                                <button
+                                                    onClick={() => toggleArchive(note.id)}
+                                                    className="p-2 hover:bg-zinc-100 text-zinc-500 hover:text-black transition-colors rounded-md"
+                                                    title={note.isArchived ? "Разархивировать" : "В архив"}
+                                                >
+                                                    {note.isArchived ? <ArchiveRestore size={16} /> : <Archive size={16} />}
+                                                </button>
+                                            )}
 
-                                    <button
-                                        onClick={() => handleSendClick(note.id)}
-                                        disabled={getSentToday(note.history || []) >= note.quantity}
-                                        className={`flex items-center gap-2 px-4 py-2 font-bold uppercase rounded text-xs tracking-wider transition-all ${getSentToday(note.history || []) >= note.quantity
-                                            ? 'bg-zinc-100 text-zinc-400 cursor-not-allowed'
-                                            : 'bg-black text-white hover:bg-zinc-800 shadow-md active:translate-y-[1px]'
-                                            }`}
-                                    >
-                                        <Send size={14} />
-                                        <span>Отправить</span>
-                                    </button>
+                                            {/* Delete Button - Only Admin */}
+                                            {['ADMIN', 'CHIEF_EDITOR'].includes(userRole) && (
+                                                <button
+                                                    onClick={() => deleteNotification(note.id)}
+                                                    className="p-2 hover:bg-red-50 text-zinc-400 hover:text-red-500 transition-colors rounded-md"
+                                                    title="Удалить"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        <button
+                                            onClick={() => handleSendClick(note.id)}
+                                            disabled={getSentToday(note.history || []) >= note.quantity}
+                                            className={`flex items-center gap-2 px-4 py-2 font-bold uppercase rounded text-xs tracking-wider transition-all ${getSentToday(note.history || []) >= note.quantity
+                                                ? 'bg-zinc-100 text-zinc-400 cursor-not-allowed'
+                                                : 'bg-black text-white hover:bg-zinc-800 shadow-md active:translate-y-[1px]'
+                                                }`}
+                                        >
+                                            <Send size={14} />
+                                            <span>Отправить</span>
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                        ))
+                            ))
                     )}
                 </div>
 
