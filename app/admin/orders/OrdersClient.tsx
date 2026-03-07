@@ -64,12 +64,14 @@ export default function OrdersClient({
     userName,
     userRole,
     initialData = [],
-    employees = []
+    employees = [],
+    isEmbedded = false
 }: {
     userName: string
     userRole: string
     initialData?: Order[]
     employees?: Array<{ id: string, name: string }>
+    isEmbedded?: boolean
 }) {
     const router = useRouter()
     const searchParams = useSearchParams()
@@ -110,7 +112,7 @@ export default function OrdersClient({
     // Initial expansion of current week
     useEffect(() => {
         const { year, week } = getISOWeekAndYear(new Date())
-        setExpandedWeeks(new Set([`${year}-W${week}`]))
+        setExpandedWeeks(new Set([`${year}-W${String(week).padStart(2, '0')}`]))
     }, [])
 
     // Handle orderId from URL query params (for navigation from Finances)
@@ -122,7 +124,7 @@ export default function OrdersClient({
             if (order) {
                 const date = new Date(order.startDate || order.createdAt)
                 const { year, week } = getISOWeekAndYear(date)
-                const weekKey = `${year}-W${week}`
+                const weekKey = `${year}-W${String(week).padStart(2, '0')}`
                 setExpandedWeeks(prev => {
                     const next = new Set(prev)
                     next.add(weekKey)
@@ -187,7 +189,7 @@ export default function OrdersClient({
         filtered.forEach(order => {
             const date = new Date(order.startDate || order.createdAt)
             const { year, week } = getISOWeekAndYear(date)
-            const key = `${year}-W${week}`
+            const key = `${year}-W${String(week).padStart(2, '0')}`
             if (!groups[key]) groups[key] = []
             groups[key].push(order)
         })
@@ -611,7 +613,7 @@ export default function OrdersClient({
         : null
 
     return (
-        <div className="min-h-screen bg-[#f4f1ea] font-serif-body">
+        <div className={isEmbedded ? "" : "min-h-screen bg-[#f4f1ea] font-serif-body"}>
             {/* Modals */}
             <PaymentModal
                 isOpen={paymentModal.isOpen}
@@ -641,25 +643,27 @@ export default function OrdersClient({
                 employees={employees}
             />
 
-            <div className="max-w-7xl mx-auto">
+            <div className={isEmbedded ? "" : "max-w-7xl mx-auto"}>
                 {/* Header */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-8 border-b-2 border-black pb-4">
-                    <div>
-                        <h1 className="font-headline text-3xl sm:text-4xl uppercase tracking-tighter">
-                            Заказы<span className="text-blue-600">.</span>
-                        </h1>
+                {!isEmbedded && (
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-8 border-b-2 border-black pb-4">
+                        <div>
+                            <h1 className="font-headline text-3xl sm:text-4xl uppercase tracking-tighter">
+                                Заказы<span className="text-blue-600">.</span>
+                            </h1>
+                        </div>
+                        <button
+                            onClick={() => {
+                                setCurrentOrder({ employee: userName })
+                                setIsEditing(true)
+                            }}
+                            className="bg-black text-white px-6 py-3 font-bold uppercase hover:bg-zinc-800 transition-colors text-sm sm:text-base flex items-center gap-2"
+                        >
+                            <Plus size={18} />
+                            Создать
+                        </button>
                     </div>
-                    <button
-                        onClick={() => {
-                            setCurrentOrder({ employee: userName })
-                            setIsEditing(true)
-                        }}
-                        className="bg-black text-white px-6 py-3 font-bold uppercase hover:bg-zinc-800 transition-colors text-sm sm:text-base flex items-center gap-2"
-                    >
-                        <Plus size={18} />
-                        Создать
-                    </button>
-                </div>
+                )}
 
                 {/* Stats Cards */}
                 <OrderStats

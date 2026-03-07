@@ -127,6 +127,15 @@ export default function NotificationsClient({
     const [isArchiveOpen, setIsArchiveOpen] = useState(false)
     const [sortBy, setSortBy] = useState<"time" | "customer" | "created">("time")
     const [filterActiveMSK, setFilterActiveMSK] = useState(false)
+    const [currentTime, setCurrentTime] = useState<number>(Date.now())
+
+    // Ticker for real-time countdowns
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentTime(Date.now())
+        }, 1000)
+        return () => clearInterval(interval)
+    }, [])
 
     // Sync state with prop updates (from server revalidation)
     useEffect(() => {
@@ -332,11 +341,18 @@ export default function NotificationsClient({
 
     const isCooldownActive = timeSinceLastSend !== null && timeSinceLastSend < 1800 // 30 minutes in seconds
 
-    // Global Cooldown Logic (5 minutes)
+    // Global Cooldown Logic (15 minutes)
     const lastGlobalSendTime = getLastGlobalSendTime()
-    const nowTime = new Date().getTime()
-    const timeSinceGlobalSend = lastGlobalSendTime ? Math.floor((nowTime - lastGlobalSendTime) / 1000) : null
-    const isGlobalCooldownActive = timeSinceGlobalSend !== null && timeSinceGlobalSend < 300 // 5 minutes in seconds
+    const timeSinceGlobalSend = lastGlobalSendTime ? Math.floor((currentTime - lastGlobalSendTime) / 1000) : null
+    const isGlobalCooldownActive = timeSinceGlobalSend !== null && timeSinceGlobalSend < 900 // 15 minutes in seconds
+
+    const getRemainingCooldown = (seconds: number, threshold: number) => {
+        const remaining = threshold - seconds
+        if (remaining <= 0) return 0
+        const m = Math.floor(remaining / 60)
+        const s = remaining % 60
+        return `${m}:${s.toString().padStart(2, '0')}`
+    }
 
     const formatTimeSince = (seconds: number) => {
         const m = Math.floor(seconds / 60)
@@ -394,10 +410,10 @@ export default function NotificationsClient({
 
                         {isGlobalCooldownActive && timeSinceGlobalSend !== null && (
                             <div className="mb-4 p-3 bg-red-50 border border-red-200 text-center">
-                                <p className="text-red-600 font-bold text-sm uppercase mb-1">Глобальный КД (5 мин)</p>
+                                <p className="text-red-600 font-bold text-sm uppercase mb-1">Глобальный КД (15 мин)</p>
                                 <p className="text-red-800 text-sm">
                                     Скрипт может не отправить сообщение.<br />
-                                    Прошло с последней отправки: <span className="font-mono font-bold text-lg">{formatTimeSince(timeSinceGlobalSend)}</span>
+                                    Осталось: <span className="font-mono font-bold text-lg">{getRemainingCooldown(timeSinceGlobalSend, 900)}</span>
                                 </p>
                             </div>
                         )}
@@ -407,7 +423,7 @@ export default function NotificationsClient({
                                 <p className="text-amber-600 font-bold text-sm uppercase mb-1">Личный КД (30 мин)</p>
                                 <p className="text-amber-800 text-sm">
                                     Вы уверены что хотите отправить сейчас? <br />
-                                    Прошло с прошлого: <span className="font-mono font-bold text-lg">{formatTimeSince(timeSinceLastSend)}</span>
+                                    Осталось: <span className="font-mono font-bold text-lg">{getRemainingCooldown(timeSinceLastSend, 1800)}</span>
                                 </p>
                             </div>
                         )}
@@ -556,6 +572,22 @@ export default function NotificationsClient({
                         <Filter size={14} />
                         Показать только активные
                     </button>
+
+                    {timeSinceGlobalSend !== null && (
+                        <div className={`flex items-center gap-2 px-4 py-2 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-white ${isGlobalCooldownActive ? 'bg-red-500 animate-pulse' : 'bg-emerald-500'}`}>
+                            <Clock size={14} />
+                            <span className="text-xs font-bold uppercase tracking-widest">
+                                {isGlobalCooldownActive ? (
+                                    <>
+                                        <span className="hidden sm:inline">КД: </span>
+                                        {getRemainingCooldown(timeSinceGlobalSend, 900)}
+                                    </>
+                                ) : (
+                                    <span className="hidden sm:inline">СИСТЕМА ГОТОВА</span>
+                                )}
+                            </span>
+                        </div>
+                    )}
 
                     {filterActiveMSK && (
                         <span className="text-[10px] font-bold uppercase text-pink-600 animate-pulse">

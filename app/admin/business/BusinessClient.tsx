@@ -41,8 +41,8 @@ export default function BusinessClient({
                         <button
                             onClick={() => setActiveTab('orders')}
                             className={`px-6 py-3 font-bold uppercase tracking-widest transition-colors border-2 border-black ${activeTab === 'orders'
-                                    ? 'bg-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'
-                                    : 'bg-white text-black hover:bg-zinc-100'
+                                ? 'bg-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'
+                                : 'bg-white text-black hover:bg-zinc-100'
                                 }`}
                         >
                             Заказы
@@ -50,8 +50,8 @@ export default function BusinessClient({
                         <button
                             onClick={() => setActiveTab('finances')}
                             className={`px-6 py-3 font-bold uppercase tracking-widest transition-colors border-2 border-black ${activeTab === 'finances'
-                                    ? 'bg-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'
-                                    : 'bg-white text-black hover:bg-zinc-100'
+                                ? 'bg-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'
+                                : 'bg-white text-black hover:bg-zinc-100'
                                 }`}
                         >
                             Финансы
@@ -67,6 +67,7 @@ export default function BusinessClient({
                             userRole={userRole}
                             initialData={orders}
                             employees={employees}
+                            isEmbedded={true}
                         />
                     ) : (
                         <FinancesClient
@@ -74,6 +75,7 @@ export default function BusinessClient({
                             userRole={userRole}
                             payments={payments}
                             transactions={transactions}
+                            isEmbedded={true}
                         />
                     )}
                 </div>
