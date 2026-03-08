@@ -341,10 +341,10 @@ export default function NotificationsClient({
 
     const isCooldownActive = timeSinceLastSend !== null && timeSinceLastSend < 1800 // 30 minutes in seconds
 
-    // Global Cooldown Logic (15 minutes)
+    // Global Cooldown Logic (10 minutes)
     const lastGlobalSendTime = getLastGlobalSendTime()
     const timeSinceGlobalSend = lastGlobalSendTime ? Math.floor((currentTime - lastGlobalSendTime) / 1000) : null
-    const isGlobalCooldownActive = timeSinceGlobalSend !== null && timeSinceGlobalSend < 900 // 15 minutes in seconds
+    const isGlobalCooldownActive = timeSinceGlobalSend !== null && timeSinceGlobalSend < 600 // 10 minutes in seconds
 
     const getRemainingCooldown = (seconds: number, threshold: number) => {
         const remaining = threshold - seconds
@@ -410,10 +410,10 @@ export default function NotificationsClient({
 
                         {isGlobalCooldownActive && timeSinceGlobalSend !== null && (
                             <div className="mb-4 p-3 bg-red-50 border border-red-200 text-center">
-                                <p className="text-red-600 font-bold text-sm uppercase mb-1">Глобальный КД (15 мин)</p>
+                                <p className="text-red-600 font-bold text-sm uppercase mb-1">Глобальный КД (10 мин)</p>
                                 <p className="text-red-800 text-sm">
                                     Скрипт может не отправить сообщение.<br />
-                                    Осталось: <span className="font-mono font-bold text-lg">{getRemainingCooldown(timeSinceGlobalSend, 900)}</span>
+                                    Осталось: <span className="font-mono font-bold text-lg">{getRemainingCooldown(timeSinceGlobalSend, 600)}</span>
                                 </p>
                             </div>
                         )}
@@ -580,7 +580,7 @@ export default function NotificationsClient({
                                 {isGlobalCooldownActive ? (
                                     <>
                                         <span className="hidden sm:inline">КД: </span>
-                                        {getRemainingCooldown(timeSinceGlobalSend, 900)}
+                                        {getRemainingCooldown(timeSinceGlobalSend, 600)}
                                     </>
                                 ) : (
                                     <span className="hidden sm:inline">СИСТЕМА ГОТОВА</span>
