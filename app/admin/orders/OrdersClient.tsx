@@ -645,25 +645,25 @@ export default function OrdersClient({
 
             <div className={isEmbedded ? "" : "max-w-7xl mx-auto"}>
                 {/* Header */}
-                {!isEmbedded && (
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-8 border-b-2 border-black pb-4">
+                <div className={`flex flex-col sm:flex-row ${!isEmbedded ? 'justify-between' : 'justify-end'} items-start sm:items-center gap-4 mb-6 md:mb-8 ${!isEmbedded ? 'border-b-2 border-black pb-4' : ''}`}>
+                    {!isEmbedded && (
                         <div>
                             <h1 className="font-headline text-3xl sm:text-4xl uppercase tracking-tighter">
                                 Заказы<span className="text-blue-600">.</span>
                             </h1>
                         </div>
-                        <button
-                            onClick={() => {
-                                setCurrentOrder({ employee: userName })
-                                setIsEditing(true)
-                            }}
-                            className="bg-black text-white px-6 py-3 font-bold uppercase hover:bg-zinc-800 transition-colors text-sm sm:text-base flex items-center gap-2"
-                        >
-                            <Plus size={18} />
-                            Создать
-                        </button>
-                    </div>
-                )}
+                    )}
+                    <button
+                        onClick={() => {
+                            setCurrentOrder({ employee: userName })
+                            setIsEditing(true)
+                        }}
+                        className="bg-black text-white px-6 py-3 font-bold uppercase hover:bg-zinc-800 transition-colors text-sm sm:text-base flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start"
+                    >
+                        <Plus size={18} />
+                        Создать
+                    </button>
+                </div>
 
                 {/* Stats Cards */}
                 <OrderStats

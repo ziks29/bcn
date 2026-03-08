@@ -334,39 +334,39 @@ export default function FinancesClient({
 
             <div className={isEmbedded ? "" : "max-w-7xl mx-auto"}>
                 {/* Header */}
-                {!isEmbedded && (
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-8 border-b-2 border-black pb-4">
+                <div className={`flex flex-col sm:flex-row ${!isEmbedded ? 'justify-between' : 'justify-end'} items-start sm:items-center gap-4 mb-6 md:mb-8 ${!isEmbedded ? 'border-b-2 border-black pb-4' : ''}`}>
+                    {!isEmbedded && (
                         <div>
                             <h1 className="font-headline text-3xl sm:text-4xl uppercase tracking-tighter">
                                 Финансы<span className="text-emerald-600">.</span>
                             </h1>
                         </div>
-                        {isAdmin && (
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={() => {
-                                        setEditingType('INCOME')
-                                        setIsEditing(true)
-                                    }}
-                                    className="bg-emerald-600 text-white px-6 py-3 font-bold uppercase hover:bg-emerald-700 transition-colors text-sm sm:text-base flex items-center gap-2"
-                                >
-                                    <Plus size={18} />
-                                    Доход
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setEditingType('EXPENSE')
-                                        setIsEditing(true)
-                                    }}
-                                    className="bg-red-600 text-white px-6 py-3 font-bold uppercase hover:bg-red-700 transition-colors text-sm sm:text-base flex items-center gap-2"
-                                >
-                                    <Minus size={18} />
-                                    Расход
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                )}
+                    )}
+                    {isAdmin && (
+                        <div className="flex gap-2 w-full sm:w-auto">
+                            <button
+                                onClick={() => {
+                                    setEditingType('INCOME')
+                                    setIsEditing(true)
+                                }}
+                                className="flex-1 sm:flex-none justify-center bg-emerald-600 text-white px-6 py-3 font-bold uppercase hover:bg-emerald-700 transition-colors text-sm sm:text-base flex items-center gap-2"
+                            >
+                                <Plus size={18} />
+                                Доход
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setEditingType('EXPENSE')
+                                    setIsEditing(true)
+                                }}
+                                className="flex-1 sm:flex-none justify-center bg-red-600 text-white px-6 py-3 font-bold uppercase hover:bg-red-700 transition-colors text-sm sm:text-base flex items-center gap-2"
+                            >
+                                <Minus size={18} />
+                                Расход
+                            </button>
+                        </div>
+                    )}
+                </div>
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
