@@ -160,6 +160,11 @@ function LoginForm() {
                             required
                             minLength={mode === "signup" ? 6 : undefined}
                         />
+                        {mode === "login" && (
+                            <p className="mt-2 text-xs text-zinc-500 font-serif-body">
+                                Забыли пароль? Напишите <span className="font-bold text-black group hover:text-red-700 transition-colors cursor-default">@ushpuras</span>
+                            </p>
+                        )}
                     </div>
 
                     {mode === "signup" && (

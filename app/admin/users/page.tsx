@@ -6,6 +6,7 @@ import UserRoleSelect from "./UserRoleSelect";
 import CreateUserForm from "./CreateUserForm";
 import DeleteUserButton from "./DeleteUserButton";
 import ApproveUserButton from "./ApproveUserButton";
+import ResetPasswordButton from "./ResetPasswordButton";
 import { formatPhone } from "@/lib/utils";
 
 export default async function UsersPage() {
@@ -69,6 +70,8 @@ export default async function UsersPage() {
                                 {!user.approved && (
                                     <ApproveUserButton userId={user.id} />
                                 )}
+
+                                <ResetPasswordButton userId={user.id} />
 
                                 <UserRoleSelect
                                     userId={user.id}

@@ -126,3 +126,26 @@ export async function approveUser(userId: string) {
         return { success: false, message: e.message || "Ошибка одобрения пользователя" };
     }
 }
+export async function resetUserPassword(formData: FormData) {
+    try {
+        await checkAdmin();
+
+        const userId = formData.get("userId") as string;
+        const newPassword = formData.get("newPassword") as string;
+
+        if (!newPassword || newPassword.length < 6) {
+            return { success: false, message: "Пароль должен быть не менее 6 символов" };
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        await prisma.user.update({
+            where: { id: userId },
+            data: { password: hashedPassword }
+        });
+
+        return { success: true, message: "Пароль пользователя успешно сброшен" };
+    } catch (e: any) {
+        return { success: false, message: e.message || "Ошибка сброса пароля" };
+    }
+}
