@@ -211,56 +211,6 @@ export async function toggleArchiveNote(id: string) {
     return updated;
 }
 
-// Update note position
-export async function updateNotePosition(id: string, posX: number, posY: number) {
-    const session = await auth();
-    if (!session?.user) {
-        throw new Error("Unauthorized");
-    }
-
-    const userId = (session.user as any).id;
-
-    const note = await prisma.note.findFirst({
-        where: { id, userId },
-    });
-
-    if (!note) {
-        throw new Error("Note not found");
-    }
-
-    const updated = await prisma.note.update({
-        where: { id },
-        data: { posX, posY },
-    });
-
-    return updated;
-}
-
-// Update note size
-export async function updateNoteSize(id: string, width: number, height: number) {
-    const session = await auth();
-    if (!session?.user) {
-        throw new Error("Unauthorized");
-    }
-
-    const userId = (session.user as any).id;
-
-    const note = await prisma.note.findFirst({
-        where: { id, userId },
-    });
-
-    if (!note) {
-        throw new Error("Note not found");
-    }
-
-    const updated = await prisma.note.update({
-        where: { id },
-        data: { width, height },
-    });
-
-    return updated;
-}
-
 // ========== Category Actions ==========
 
 // Get all categories for current user
